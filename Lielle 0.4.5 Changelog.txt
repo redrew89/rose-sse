@@ -1,0 +1,95 @@
+Lielle 0.4.5 Changelog
+
+Implemented fully voiced dialogue across all major content in the 0.4.x development branch -- Some stray files may still be missing or out-of-place
+Elements backported from 0.5.0:
+Backported a number of scripting optimizations from 0.5.0, including central logging in custom logfile if Papyrus logging is enabled
+Backported enhancements made to MCM
+Backported enhancements to the spell selection framework, including support for Apocalypse - Magic of Skyrim
+Backported gating elements for Lielle's Secret; Players will need to complete the College of Winterhold questline before she will study The Dreamstride
+Backported a story alteration during Lielle's Secret; She will now directly ask the player their willingness to hear her out, before the nightmare starts
+Backported minor dialogue revisions in Lielle's Secret
+Backported dialogue revisions to her introduction dialogue and Affection dialogues
+Adjusted Lielle's player-targeted healing to be more effective; temporarily disabled healing idle lines
+Revised expanded follower interactions -- Some content has been removed 
+Incorporated new body selection options into the FOMOD, including a new static UUNP nevernude option as the "vanilla friendly" selection -- Full README included in FOMOD
+Incorporated 0.4.x High Poly Head replacer option - Requires Expressive Facial Animations -Female Edition-
+Incorporated updated Clean Face warpaint remover option, with new micro-plugin to disable associated dialogue
+Adjusted Lielle's appearance data, making her slightly shorter than in previous versions. Don't judge me--you know it suits her.
+Adjusted Young Lielle's appearance data for consistency with above change
+Made adjustments to Lielle's default AI packages so that she will now idle in the Hall of the Elements during First Lessons, as originally intended
+Implemented experimental script patch for Busy Follower Framework as well as updated script patch for Extensible Follower Framework -- Note that these patches will be discontinued with 0.5.0 
+Rough revisions to rebalance Affection across most of the existing content; Affection changes have now been reduced to less than whole numbers, with larger bonuses for specific quest completion -- This change is finalized more fully in 0.5.0
+Backported changes made relating to various College overhauls and associated patches
+Updated Obscure's CoW patch with parallel tracking feature for Lielle's door plaque
+Implemented first-pass attempt at a patch for Ultimate College of Winterhold; Consider experimental until further notice
+Minor edits and adjustments to patches for Immersive CoW and Magical CoW
+Updated both the TK Children and Cutting Room Floor patches to ESP-FE format, to reduce plugin slot usage
+Made an adjustment to the main quest commentary so that Lielle should now force greet before the player leaves for the Thalmor Embassy as part of Diplomatic Immunity
+
+A Team Rose Production:
+
+Technical and Creative Team:
+
+Drew H. "ReDrew89"		Lead Writer, Lead Developer, Lead Character Designer
+"Dashogi"			Supporting Writer
+"SanneARBY"			Lead Level Designer, Promotional Artist
+"Scorcher"			QA Lead, Play Tester
+"pndragon65"			Play Tester
+
+Voice Talent:
+
+Jody Sharp "JoJoRawr"		Lielle, Young Lielle, Child Lielle
+Milica Radovanović "MilicaVO"	Sees-With-Three-Eyes
+"YoungOne" 			Malek and Marek (Child)
+"Vanwood"			Markus
+Ethan Smith			Bandit 1
+D.D. Rumin			Bandit 2
+
+Special Mention:
+
+The Unofficial Elder Scrolls Pages Wiki
+/r/SkyrimMods
+
+Character Assets:
+
+KS Hairdos by Kalilies
+Frecklemania 2 by tetrodoxin
+CBBE 3BBB Advanced
+Caliente's Beautiful Bodies Enhancer
+Unified UNP
+Baka Haeun UNP
+Fair Skin Complexion SE
+Women of Skyrim SE
+Skin Feature Overlays SE
+UNP Dragon Tattoos and more by AncientKane (Legendary Edition, personal port)
+Robert HGEC Underwear CBBE 3BA
+UNP Nevernude Bikini BHUNP Bodyslide Conversion
+CBBE 3BA Vanilla Outfits Redone
+BHUNP Skyrim Vanilla Outfits
+Female Hands Redone
+Osare Culort Outfit by anano feat. Zynxx
+Ashara Imperial Outfit (Port removed)
+
+Tools and Software:
+
+Mod Organizer 2
+Creation Kit Platform Extended
+xEdit
+BSA Browser
+Paint.NET
+Notepad++
+Audacity
+BodySlide and Outfit Studio
+blender
+
+Scripting and Implementation Techniques:
+
+Lucien by JosephRussell
+Deadwood 2.0 by PyroToaster
+Spellbreaker Spell Reflection and Ward Visuals Restored
+
+Patreon (All-Inclusive):
+
+"jwisser"
+"Drac"
+"piranha45"
