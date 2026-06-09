@@ -12,7 +12,7 @@ Bool useNiOverride = False
 String overlayNode = ""
 Bool isFemale
 Float frameDelay = 0.05
-String blushTexture = "textures\\effects\\blush\\blush.dds" ; Replace with your actual blush texture path
+String blushTexture = "textures\\lielle\\effects\\blush\\blush.dds" ; Replace with your actual blush texture path
 Float fadeDuration = 0.5
 
 Event OnEffectStart(Actor akTarget, Actor akCaster)

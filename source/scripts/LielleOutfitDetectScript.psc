@@ -1,183 +1,387 @@
-Scriptname LielleOutfitDetectScript extends ReferenceAlias  
+Scriptname LielleOutfitDetectScript extends ReferenceAlias
+
+; =========================================================
+; Outfit Detection / Acceptance Policy
+; Primary signals come from KID (and ORF/SLA mappings).
+; This script enforces Lielle’s rules when the player gives / equips armor.
+; =========================================================
+
+; --- Keywords assigned via KID ---
+Keyword Property LielleOutfitSkimpy Auto
+Keyword Property LielleOutfitRevealing Auto
+Keyword Property LielleOutfitScandalous Auto
+Keyword Property LielleOutfitForbidden Auto
+Keyword Property LielleOutfitIgnore Auto
+
+; --- Scenes ---
+Scene Property LielleOutfitRefusalScene Auto
+Scene Property LielleOutfitUncomfortableScene Auto ; (reserved for later use)
+Scene Property LielleOutfitAcceptanceScene Auto
+
+; --- Other scripts / systems ---
+LielleXOScript Property XO Auto
+LielleOutfitScript Property OutfitManager Auto
+
+; --- Storage / bookkeeping ---
+ObjectReference Property LielleRejectedOutfitsContainer Auto
+GlobalVariable Property LielleOutfitReject Auto
+FormList Property LielleOutfitPlayerFLST Auto
+Faction Property CurrentFollowerFaction Auto
+
+String msgFlag = "LielleCore - OutfitDetect: "
+
+; Prevent re-entrant equip spam from our own EquipItem calls
+bool _suppressEquipEvent = false
 
 
-;Keywords assigned to outfits via KID
-Keyword Property LielleOutfitSkimpy Auto ; Keyword for skimpy outfits - Shows some skin, but still somewhat tasteful - eg; Remodeled Armor
-	Keyword Property LielleOutfitRevealing Auto ; Keyword for revealing outfits that show a lot of skin - eg; Bikini Armor, Modular Mage
-		Keyword Property LielleOutfitScandalous Auto ; Keyword for highly sexualized outfits, particularly exposed genitals or breasts - eg; lingerie or fetish outfits, certain items in Modular Mage
-			Keyword Property LielleOutfitForbidden Auto ; TODO - Add to plugin and set property value - Keyword assigned to outfits that Lielle would never wear: Forsworn, Thalmor, etc
-			; Scenes for indication of refusal/acceptance
-			Scene Property LielleOutfitRefusalScene Auto ; Scene for outfit refusal dialogue - Low Affection
-				Scene Property LielleOutfitUncomfortableScene Auto ; Scene for reluctant outfit acceptance dialogues - revealing and scandelous outfits - Moderate Affection
-					Scene Property LielleOutfitAcceptanceScene Auto ; Scene for outfit acceptance dialogues
-						;Other scripts
-						LielleXOScript Property XO Auto ; LielleXOScript to check Affection
-								LielleOutfitScript Property OutfitManager Auto
-									; Misc Properties
-									ObjectReference Property LielleRejectedOutfitsContainer Auto ; Container used for rejected outfits, accessed via dialogue
-										GlobalVariable Property LielleOutfitReject Auto ; Global used for conditional logic
-											Formlist Property LielleOutfitPlayerFLST Auto ; Formlist used for items given by player
-												Faction Property CurrentFollowerFaction Auto ; Follower Faction
+; =========================================================
+; Events
+; =========================================================
 
-
-; TODO - Secondary GlobalVariable LielleOutfitRefusedTier - indicates how severe her response would be in the refusal scene. Can be added in 0.6.0 update
-					
-string msgFlag = "LielleCore - Outfits: "					
-					
 Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
-	
-	if akBaseObject == OutfitManager.LielleCollegeRobes.GetNthPart(1)
-		CheckCurrentOutfit()
-		OutfitManager.Core.Msg(msgFlag + "Checking if Lielle is wearing the right outfit.", false)		
-	elseif akBaseObject == OutfitManager.IcarusWig || akBaseObject == OutfitManager.CambrianWig
+	if _suppressEquipEvent
+		return
+	endif
+
+	if akBaseObject == None
+		return
+	endif
+
+	; Ignore wig equip noise (your OutfitManager owns wig behavior)
+	if akBaseObject == OutfitManager.IcarusWig || akBaseObject == OutfitManager.CambrianWig
 		OutfitManager.Core.Msg(msgFlag + "Ignoring equip event for SMP wig.", false)
 		return
 	endif
-	bool bIsOutfitItem
-	int i = 0 
-	int total = OutfitManager.LielleCollegeRobes.GetNumParts()
-	while i < total
-		if OutfitManager.LielleCollegeRobes.GetNthPart(i) 
-			bIsOutfitItem = true
-		endif
-		i +=1
-	endWhile
-	if (OutfitManager.LielleMisfitOutfitFLST.HasForm(akBaseObject) || OutfitManager.LielleResearcherOutfitFLST.HasForm(akBaseObject) || OutfitManager.LielleOutfitWeddingFLST.HasForm(akBaseObject) || OutfitManager.LielleOutfitCloakFLST.HasForm(akBaseObject)) 
-		bIsOutfitItem = true
+
+	; Only care about armor
+	if akBaseObject.GetType() != 26
+		return
 	endif
-	if !(LielleOutfitPlayerFLST.HasForm(akBaseObject)) && akBaseObject.GetType() == 26 && !bIsOutfitItem
-		if LielleOutfitPlayerFLST.GetSize() == 0
-			OutfitManager.Core.Msg(msgFlag + "Defining player-provided outfit.", false)
-		endif
-		LielleOutfitPlayerFLST.AddForm(akBaseObject as Armor) 
-		OutfitManager.Core.Msg(msgFlag + "added item to formlist: " + akBaseObject.GetName(), false)
-		OutfitManager.LielleOutfitCurrent.SetValueInt(20) ; Custom outfit flag - used to prevent outfit enforcement overriding
-		OutfitManager.ClearOutfit()
+
+	Armor a = akBaseObject as Armor
+	Actor Lielle = GetActorReference()
+	if Lielle == None
+		return
 	endif
-	
-endEvent
+
+	; If this is one of Lielle's managed outfit items, do not treat as player-provided
+	if IsManagedOutfitItem(akBaseObject)
+		return
+	endif
+
+	; If we already consider it part of player-provided outfit, just validate (covers re-equip)
+	if LielleOutfitPlayerFLST.HasForm(akBaseObject)
+		ValidateAndResolve(a)
+		return
+	endif
+
+	; New player-provided item: record it and set state 20 so manager doesn't enforce defaults over it
+	if LielleOutfitPlayerFLST.GetSize() == 0
+		OutfitManager.Core.Msg(msgFlag + "Defining player-provided outfit.", false)
+	endif
+
+	LielleOutfitPlayerFLST.AddForm(a)
+	OutfitManager.Core.Msg(msgFlag + "Added item to player outfit list: " + akBaseObject.GetName(), false)
+
+	OutfitManager.LielleOutfitCurrent.SetValueInt(20)
+	OutfitManager.ClearOutfit()
+
+	; Now validate the newly added piece (may be removed/refused)
+	ValidateAndResolve(a)
+EndEvent
+
 
 Event OnItemAdded(Form akBaseItem, int aiItemCount, ObjectReference akItemReference, ObjectReference akSourceContainer)
-
-	if akBaseItem.GetType() == 26 
-		ValidateItem(akBaseItem)
-	endif
-		
-endEvent
-
-Event OnPlayerLoadGame()
-
-	if !GetActorReference().IsInFaction(CurrentFollowerFaction) 
-		CheckCurrentOutfit()
-	endif
-
-EndEvent
-
-Event OnCellAttach()
-
-	if !GetActorReference().IsInFaction(CurrentFollowerFaction)
-		CheckCurrentOutfit()
-	endif
-
-EndEvent
-
-
-Function CheckCurrentOutfit()
-
-	int currentOutfit = OutfitManager.LielleOutfitCurrent.GetValueInt()
-    
-    if currentOutfit == 1
-        OutfitManager.SetOutFitMisfit()
-    elseif currentOutfit == 2
-        OutfitManager.SetOutfitResearcher()
-    elseif currentOutfit == 10
-        OutfitManager.SetOutfitWedding()
-	elseif currentOutfit == 20 ; Player-provided
+	if akBaseItem == None
 		return
-	else
-		OutfitManager.SetOutfitDefault()
-    endif
-	
-	if GetActorReference().GetWornForm(0x00000004) == NONE
-		OutfitManager.SetOutfitDefault()
 	endif
-		
-endFunction
+	if akBaseItem.GetType() != 26
+		return
+	endif
 
-Function ValidateItem(Form currentForm)
-	Actor Lielle = self.GetActorReference()
-	int itemCount
-	
-	if currentForm.HasKeyword(LielleOutfitSkimpy) && XO.LielleXOVar < 5
-		;refusal
-		itemcount = Lielle.GetItemCount(currentForm)
-		Lielle.RemoveItem(currentForm, itemCount, false, LielleRejectedOutfitsContainer)
-		LielleOutfitPlayerFLST.RemoveAddedForm(currentForm)
-		LielleOutfitReject.SetValueInt(1)
-		OutfitManager.Core.Msg(msgFlag + "Removed an item because it was skimpy. " + currentForm.GetName())
-	elseif currentForm.HasKeyword(LielleOutfitRevealing) && XO.LielleXOVar < 7
-		;refusal 
-		itemCount = Lielle.GetItemCount(currentForm)
-		Lielle.RemoveItem(currentForm, itemCount, false, LielleRejectedOutfitsContainer)
-		LielleOutfitPlayerFLST.RemoveAddedForm(currentForm)
-		LielleOutfitReject.SetValueInt(1)
-		OutfitManager.Core.Msg(msgFlag + "Removed an item because it was revealing. " + currentForm.GetName())
-	elseif currentForm.HasKeyword(LielleOutfitScandalous) && XO.LielleXOVar < 9
-		;refusal
-		itemCount = Lielle.GetItemCount(currentForm)
-		Lielle.RemoveItem(currentForm, itemCount, false, LielleRejectedOutfitsContainer)
-		LielleOutfitPlayerFLST.RemoveAddedForm(currentForm)
-		LielleOutfitReject.SetValueInt(1)
-		OutfitManager.Core.Msg(msgFlag + "Removed an item because it was scandalous. " + currentForm.GetName())
-	elseif currentForm.HasKeyword(LielleOutfitForbidden) 
-		;hard refusal, no affection thresold
-		itemCount = Lielle.GetItemCount(currentForm)
-		Lielle.RemoveItem(currentForm, itemCount, false, LielleRejectedOutfitsContainer)
-		LielleOutfitPlayerFLST.RemoveAddedForm(currentForm)
-		LielleOutfitReject.SetValueInt(1)
-		OutfitManager.Core.Msg(msgFlag + "Removed an item because it was forbidden. " + currentForm.GetName())
-	else
-		;acceptance
-		GetActorReference().EquipItem(currentForm as Armor,true,true)
-		;OutfitManager.LielleOutfitCurrent.SetValueInt(20)
+	; Only validate items that are in Lielle’s inventory (added events can be noisy)
+	Armor a = akBaseItem as Armor
+	if a
+		ValidateAndResolve(a)
 	endif
-	
-	bool allowedOutfit = (GetActorReference().WornHasKeyword(LielleOutfitSkimpy) || GetActorReference().WornHasKeyword(LielleOutfitRevealing) || GetActorReference().WornHasKeyword(LielleOutfitScandalous))
-	
-	if LielleOutfitReject.GetValueInt() == 1
-		RefuseOutfit()
-	elseif LielleOutfitReject.GetValueInt() == 0 && allowedOutfit
-		OutfitManager.Core.Msg(msgFlag + "Accepted an item based on Affection.")
-		AcceptOutfit()
-	endif
-	
-endFunction
+EndEvent
 
-			
+
 Event OnItemRemoved(Form akBaseItem, int aiItemCount, ObjectReference akItemReference, ObjectReference akDestContainer)
-			
-	if (akDestContainer == LielleRejectedOutfitsContainer || akDestContainer == Game.GetPlayer()) && LielleOutfitPlayerFLST.HasForm(akBaseItem)
+	if akBaseItem == None
+		return
+	endif
+
+	; Only care about removals from the player-provided list
+	if !LielleOutfitPlayerFLST.HasForm(akBaseItem)
+		return
+	endif
+
+	; If it moved to the rejection container or back to player, remove it from the list
+	if akDestContainer == LielleRejectedOutfitsContainer || akDestContainer == Game.GetPlayer()
 		LielleOutfitPlayerFLST.RemoveAddedForm(akBaseItem)
-		OutfitManager.Core.Msg(msgFlag + "Removed item from player-provided outfit: " + akBaseItem.GetName())
+		OutfitManager.Core.Msg(msgFlag + "Removed item from player-provided outfit list: " + akBaseItem.GetName(), false)
 	else
 		return
 	endif
-	
+
+	; If player outfit cleared, revert to defaults
 	if LielleOutfitPlayerFLST.GetSize() == 0 && OutfitManager.LielleOutfitCurrent.GetValueInt() == 20
 		OutfitManager.SetOutfitDefault()
-		OutfitManager.Core.Msg(msgFlag + "Player-provided outfit cleared. Reverting to default.")
-	else	
+		OutfitManager.Core.Msg(msgFlag + "Player-provided outfit cleared. Reverting to default.", false)
+	else
 		CheckCurrentOutfit()
-	endif		
-	
-endEvent
+	endif
+EndEvent
 
-Function RefuseOutfit()	
-	LielleOutfitRefusalScene.Start()
+
+Event OnCellAttach()
+	Actor L = GetActorReference()
+	if L == None
+		return
+	endif
+
+	if !L.IsInFaction(CurrentFollowerFaction)
+		CheckCurrentOutfit()
+	endif
+EndEvent
+
+
+; =========================================================
+; Core logic
+; =========================================================
+
+Function CheckCurrentOutfit()
+	int currentOutfit = OutfitManager.LielleOutfitCurrent.GetValueInt()
+
+	if currentOutfit == 1
+		OutfitManager.SetOutFitMisfit()
+	elseif currentOutfit == 2
+		OutfitManager.SetOutfitResearcher()
+	elseif currentOutfit == 10
+		OutfitManager.SetOutfitWedding()
+	elseif currentOutfit == 20
+		; Player-provided: do not enforce
+		return
+	else
+		OutfitManager.SetOutfitDefault()
+	endif
+
+	; Safety: if she somehow lacks body slot, re-apply default
+	if GetActorReference().GetWornForm(0x00000004) == None
+		OutfitManager.SetOutfitDefault()
+	endif
+EndFunction
+
+
+Function ValidateAndResolve(Armor a)
+	if a == None
+		return
+	endif
+
+	Actor Lielle = GetActorReference()
+	if Lielle == None
+		return
+	endif
+
+	; Reset reject flag for this evaluation pass
+	LielleOutfitReject.SetValueInt(0)
+
+	int tier = ClassifyTier(a)
+
+	; Tier 0 = neutral/no-op
+	if tier == 0
+		return
+	endif
+
+	; Tier -1 = ignore (always accept)
+	if tier == -1
+		SafeEquip(a)
+		return
+	endif
+
+	; Forbidden is absolute
+	if tier == 4
+		RejectItem(a, "forbidden")
+		RefuseOutfit()
+		return
+	endif
+
+	; Affection thresholds
+	float aff = XO.LielleXOVar
+	bool allowed = IsAllowedByAffection(tier, aff)
+
+	if !allowed
+		String label = TierLabel(tier)
+		RejectItem(a, label)
+		RefuseOutfit()
+		return
+	endif
+
+	; Allowed: accept and optionally play acceptance scene
+	SafeEquip(a)
+	AcceptOutfit()
+EndFunction
+
+
+; =========================================================
+; Classification / policy helpers
+; =========================================================
+
+; Returns:
+;  -1 = ignore
+;   0 = neutral (no special handling)
+;   1 = skimpy
+;   2 = revealing
+;   3 = scandalous
+;   4 = forbidden
+int Function ClassifyTier(Armor a)
+	; Hard override first
+	if a.HasKeyword(LielleOutfitIgnore)
+		return -1
+	endif
+
+	; Absolute refusal next
+	if a.HasKeyword(LielleOutfitForbidden)
+		return 4
+	endif
+
+	; Escalation order matters: highest tier wins if multiple keywords exist
+	if a.HasKeyword(LielleOutfitScandalous)
+		return 3
+	endif
+	if a.HasKeyword(LielleOutfitRevealing)
+		return 2
+	endif
+	if a.HasKeyword(LielleOutfitSkimpy)
+		return 1
+	endif
+
+	return 0
+EndFunction
+
+
+bool Function IsAllowedByAffection(int tier, float affection)
+	; thresholds: skimpy >= 5, revealing >= 7, scandalous >= 9
+	if tier == 1
+		return affection >= 5
+	elseif tier == 2
+		return affection >= 7
+	elseif tier == 3
+		return affection >= 9
+	endif
+	return true
+EndFunction
+
+
+String Function TierLabel(int tier)
+	if tier == 1
+		return "skimpy"
+	elseif tier == 2
+		return "revealing"
+	elseif tier == 3
+		return "scandalous"
+	elseif tier == 4
+		return "forbidden"
+	endif
+	return "neutral"
+EndFunction
+
+
+; =========================================================
+; Actions
+; =========================================================
+
+Function SafeEquip(Armor a)
+	if a == None
+		return
+	endif
+
+	Actor L = GetActorReference()
+	if L == None
+		return
+	endif
+
+	_suppressEquipEvent = true
+	L.EquipItem(a, true, true)
+	_suppressEquipEvent = false
+EndFunction
+
+
+Function RejectItem(Armor a, String reason)
+	Actor L = GetActorReference()
+	if L == None || a == None
+		return
+	endif
+
+	int itemCount = L.GetItemCount(a)
+	if itemCount <= 0
+		; If somehow not in inventory, just bail
+		return
+	endif
+
+	L.RemoveItem(a, itemCount, false, LielleRejectedOutfitsContainer)
+
+	if LielleOutfitPlayerFLST.HasForm(a)
+		LielleOutfitPlayerFLST.RemoveAddedForm(a)
+	endif
+
+	LielleOutfitReject.SetValueInt(1)
+	OutfitManager.Core.Msg(msgFlag + "Rejected item (" + reason + "): " + a.GetName(), false)
+EndFunction
+
+
+Function RefuseOutfit()
+	if LielleOutfitRefusalScene
+		LielleOutfitRefusalScene.Start()
+	endif
 	CheckCurrentOutfit()
-endFunction
+EndFunction
+
 
 Function AcceptOutfit()
-	LielleOutfitAcceptanceScene.Start()
-endFunction
+	if LielleOutfitAcceptanceScene
+		LielleOutfitAcceptanceScene.Start()
+	endif
+EndFunction
 
+
+; =========================================================
+; Managed outfit detection
+; (Items Lielle equips as part of her own system, not player-provided)
+; =========================================================
+
+bool Function IsManagedOutfitItem(Form f)
+	if f == None
+		return false
+	endif
+
+	; Default outfit parts
+	int i = 0
+	int total = OutfitManager.LielleCollegeRobes.GetNumParts()
+	while i < total
+		if f == OutfitManager.LielleCollegeRobes.GetNthPart(i)
+			return true
+		endif
+		i += 1
+	endWhile
+
+	; Other system-controlled lists
+	if OutfitManager.LielleMisfitOutfitFLST && OutfitManager.LielleMisfitOutfitFLST.HasForm(f)
+		return true
+	endif
+	if OutfitManager.LielleResearcherOutfitFLST && OutfitManager.LielleResearcherOutfitFLST.HasForm(f)
+		return true
+	endif
+	if OutfitManager.LielleOutfitWeddingFLST && OutfitManager.LielleOutfitWeddingFLST.HasForm(f)
+		return true
+	endif
+	if OutfitManager.LielleOutfitCloakFLST && OutfitManager.LielleOutfitCloakFLST.HasForm(f)
+		return true
+	endif
+	if OutfitManager.LielleModularOutfitFLST && OutfitManager.LielleModularOutfitFLST.HasForm(f)
+		return true
+	endif
+
+	return false
+EndFunction

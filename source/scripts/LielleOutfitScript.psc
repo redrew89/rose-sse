@@ -3,12 +3,16 @@ Scriptname LielleOutfitScript extends Quest
 FormList Property LielleMisfitOutfitFLST Auto ; Formlist for containing Misfit Mage Outfit
 	Formlist Property LielleOutfitWeddingFLST Auto ; Formlist for Lielle's wedding outfit - manually filled; added to by script
 		FormList Property LielleResearcherOutfitFLST Auto ; Formlist for containing DwemerResearcherArmor Outfit
+		FormList Property LielleModularOutfitFLST Auto ; Formlist for containing Alternate Default Outfit from Modular Mage
+		Armor Property ModularJacket Auto
+		Spell Property ModularJacketSpell Auto
 			ReferenceAlias Property LielleAlias Auto ; Alias on LielleCSQOutfits - This quest
 				ObjectReference Property LielleRef Auto ; Lielle's specific reference, to force if the alias won't fill
-					GlobalVariable Property LielleOutfitCurrent Auto ; Current Outfit: 0 - College Robes, 1 - Misfit, 2 - Researcher, 10 - Wedding
+					GlobalVariable Property LielleOutfitCurrent Auto ; Current Outfit: 0 - College Robes/Alternate, 1 - Misfit, 2 - Researcher, 10 - Wedding
 						GlobalVariable Property LielleOutfitMisfit Auto ; Global used for dialogue conditions
 							GlobalVariable Property LielleOutfitResearcher Auto ; Global used for dialogue conditions	
-								Outfit Property LielleCollegeRobes Auto ; Default Outfit
+								GlobalVariable Property LielleOutfitAlternate Auto ; Global used for dialogue conditions	
+								Outfit Property LielleCollegeRobes Auto ; Default Outfit									
 									Armor Property Lielle_GogglesUp Auto ; Lielle's goggles; given to her when LielleARQWord starts up for the first time
 										Quest Property LielleARQWord Auto ; Word Wall research quest - Used to check if goggles need equiped
 											Armor Property IcarusWig Auto ; Empty armor variable for KS Wig - filled in state InitStart
@@ -18,12 +22,15 @@ FormList Property LielleMisfitOutfitFLST Auto ; Formlist for containing Misfit M
 														GlobalVariable Property LielleOutfitCloak Auto ; Global to track if cloaks are available
 															GlobalVariable Property LielleOutfitCloakToggle Auto ; Global to toggle dynamic cloaks
 																Outfit Property LielleEmptyOutfit Auto
-																	Armor Property TattooGlow Auto
+																	Armor Property LielleBodyCustom Auto
 																		Quest Property LielleCSQTattooGlow Auto
 																			bool Property bWeddingItemsAdded = false Auto
 																				bool Property bWigsFound = false Auto
+																				int Property iLielleBodyState = 0 Auto
 																					LielleCoreScript Property Core Auto
 																						String msgFlag = "LielleCore - Outfits: "
+																						String sNudeBody = "lielle\\nude\\femalebody_1.nif"
+																						String sUnderwearBody = "lielle\\femalebody_1.nif"
 																		
 Event OnInit()
 	Core.Msg(msgFlag + "Initialization starting, waiting for aliases to initialize...")
@@ -33,16 +40,44 @@ Event OnInit()
 	GotoState("InitStart")
 EndEvent 
 
-Event OnPlayerLoadGame()
-		ClearOutfit()
-		GotoState("InitStart")
-endEvent
-
-
 State InitStart
 
 	Event OnBeginState()
 	
+		if SKSE.GetPluginVersion("FormListManipulator") != -1
+			Core.Msg(msgFlag + "FLM Found. Checking formlists.")
+			
+			if LielleMisfitOutfitFLST.GetSize() > 0 ||\
+			LielleResearcherOutfitFLST.GetSize() > 0 ||\
+			LielleModularOutfitFLST.GetSize() > 0 ||\
+			LielleOutfitCloakFLST.GetSize() > 0 ||\
+			LielleOutfitWeddingFLST.GetSize() > 0
+				Core.Msg(msgFlag + "Formlists already populated. Skipping scripted population.",true)
+				if LielleMisfitOutfitFLST.GetSize() > 0
+					LielleOutfitMisfit.SetValueInt(1)
+				endif
+				if LielleResearcherOutfitFLST.GetSize() > 0
+					LielleOutfitResearcher.SetValueInt(1)
+				endif
+				if LielleModularOutfitFLST.GetSize() > 0
+					LielleOutfitAlternate.SetValueInt(1)
+					ModularJacket = Game.GetFormFromFile(0x000F41, "[Imp] Modular Mage.esp") as Armor ; Adept jacket
+					(LielleAlias.GetActorReference()).AddSpell(ModularJacketSpell)
+				endif
+				if LielleOutfitCloakFLST.GetSize() > 0
+					LielleOutfitCloak.SetValueInt(1)
+					LielleOutfitCloakToggle.SetValueInt(1)
+				endif
+				if LielleOutfitWeddingFLST.GetSize() > 2
+					bWeddingItemsAdded = true
+				endif
+
+				return
+			endif
+			
+		endif
+		
+		; Consider depreciating this, as I can give her SMP hair at the facegen layer, now
 		if (Game.GetModByName("KSWigsSMP.esp") != 255) && IcarusWig == NONE ; Check for KS Wigs SMP
 			IcarusWig = Game.GetFormFromFile(0x00000836, "KSWigsSMP.esp") as Armor ; fill Armor property
 			if IcarusWig
@@ -55,6 +90,8 @@ State InitStart
 		else
 			Core.Msg(msgFlag + "KSWigsSMP not detected.", false)
 		endif
+		
+		
 		
 		;Add WestWind Misfit Mage outfit to formlist
 		if LielleMisfitOutfitFLST.GetSize() == 0 && Game.GetFormFromFile(0x00000005, "WestwindMisfit.esp") ; My conversion with renumbered formIDs
@@ -92,6 +129,23 @@ State InitStart
 			Core.Msg(msgFlag + "Dwarven Researcher not found", false)
 		endif
 		
+		;Add Dwemer Researcher outfit to formlist
+		if(Game.GetModByName("[Imp] Modular Mage.esp")) != 255 && LielleModularOutfitFLST.GetSize() == 0 
+			Core.Msg(msgFlag + "Dwemer Researcher found. Fashionable and practical.")
+			LielleModularOutfitFLST.AddForm(Game.GetFormFromFile(0x000823, "[Imp] Modular Mage.esp")) ; Adept Corset 3
+			LielleModularOutfitFLST.AddForm(Game.GetFormFromFile(0x000887, "[Imp] Modular Mage.esp")) ; Adept armwraps
+			LielleModularOutfitFLST.AddForm(Game.GetFormFromFile(0x00090D, "[Imp] Modular Mage.esp")) ; Adept shorts
+			LielleModularOutfitFLST.AddForm(Game.GetFormFromFile(0x000913, "[Imp] Modular Mage.esp")) ; Adept stockings 3
+			LielleModularOutfitFLST.AddForm(Game.GetFormFromFile(0x000D79, "[Imp] Modular Mage.esp")) ; Adept high heels
+			LielleModularOutfitFLST.AddForm(Game.GetFormFromFile(0x000EB0, "[Imp] Modular Mage.esp")) ; Adept skirt 3			
+			ModularJacket = Game.GetFormFromFile(0x000F41, "[Imp] Modular Mage.esp") as Armor ; Adept jacket
+			(LielleAlias.GetActorReference()).AddSpell(ModularJacketSpell)
+			LielleOutfitAlternate.SetValueInt(1)
+		else
+			Core.Msg(msgFlag + "Dwarven Researcher not found", false)
+		endif
+		
+		
 		;Add cloaks to formlist
 		if(Game.GetModByName("Cloaks.esp")) != 255 && LielleOutfitCloakFLST.GetSize() == 0
 			Core.Msg(msgFlag + "Cloaks found. Good, it was getting cold.")
@@ -128,10 +182,57 @@ State InitStart
 	
 EndState
 
+Function SetBody(int iState)
+
+	iLielleBodyState = iState
+
+	if iState == 0 ; underwear always
+	
+		ArmorAddon LielleBodyAP = LielleBodyCustom.GetNthArmorAddon(0)
+		LielleBodyAP.SetModelPath(sUnderwearBody,false,true)
+	
+	elseif iState == 1 ; story-based nudity
+		
+		ArmorAddon LielleBodyAP = LielleBodyCustom.GetNthArmorAddon(0)
+		if LielleBodyAP.GetModelPath(false,true) != sNudeBody
+			sUnderwearBody = LielleBodyAP.GetModelPath(false,true)
+		endif
+		
+	elseif iState == 2 ; always nude
+			
+		ArmorAddon LielleBodyAP = LielleBodyCustom.GetNthArmorAddon(0)
+		if LielleBodyAP.GetModelPath(false,true) != sNudeBody
+			sUnderwearBody = LielleBodyAP.GetModelPath(false,true)
+		endif
+		LielleBodyAP.SetModelPath(sNudeBody,false,true)
+		
+	endif
+
+EndFunction
+
+
+bool isNude = false
+Function SwapBody()
+	
+	ArmorAddon LielleBodyAP = LielleBodyCustom.GetNthArmorAddon(0)
+
+	if iLielleBodyState == 1 && !isNude 
+		
+		LielleBodyAP.SetModelPath(sNudeBody,false,true)
+	
+	elseif isNude
+		
+		LielleBodyAP.SetModelPath(sUnderwearBody,false,true)
+
+	endif
+
+EndFunction
+
+
 Function ClearOutfit()
 
 	Actor Lielle = LielleAlias.GetActorReference()
-	;Lielle.UnequipAll()
+	Lielle.UnequipAll()
 	if LielleOutfitCurrent.GetValueInt() == 0 
 		int i = 0 
 		while i < (LielleMisfitOutfitFLST.GetSize())
@@ -165,6 +266,11 @@ Function ClearOutfit()
 		i = 0
 		while i < (LielleResearcherOutfitFLST.GetSize())
 			Lielle.RemoveItem(LielleResearcherOutfitFLST.GetAt(i))
+			i +=1
+		endWhile
+		i = 0
+		while i < (LielleModularOutfitFLST.GetSize())
+			Lielle.RemoveItem(LielleModularOutfitFLST.GetAt(i))
 			i +=1
 		endWhile
 		i = 0
@@ -209,6 +315,11 @@ Function ClearOutfit()
 			Lielle.RemoveItem(LielleResearcherOutfitFLST.GetAt(i))
 			i +=1
 		endWhile
+		i = 0
+		while i < (LielleModularOutfitFLST.GetSize())
+			Lielle.RemoveItem(LielleModularOutfitFLST.GetAt(i))
+			i +=1
+		endWhile
 	elseif LielleOutfitCurrent.GetValueInt() == 20
 		LielleAlias.GetActorReference().SetOutfit(LielleEmptyOutfit)
 	endif
@@ -219,27 +330,27 @@ EndFunction
 
 Function SetOutfitMisfit()
 	LielleOutfitCurrent.SetValueInt(1)	
-	
+	ClearOutfit()
 	LielleAlias.GetActorReference().SetOutfit(LielleEmptyOutfit)
 	int i = 0
 	while i < (LielleMisfitOutfitFLST.GetSize())
 		LielleAlias.GetActorReference().EquipItem(LielleMisfitOutfitFLST.GetAt(i) as Armor, true,true)
 		i +=1
 	endWhile
-	ClearOutfit()
+	
 	SetExtra()
 EndFunction
 
 Function SetOutfitResearcher()
 	LielleOutfitCurrent.SetValueInt(2)	
-		
+	ClearOutfit()	
 	LielleAlias.GetActorReference().SetOutfit(LielleEmptyOutfit)
 	int i = 0
 	while i < (LielleResearcherOutfitFLST.GetSize())
 		LielleAlias.GetActorReference().EquipItem(LielleResearcherOutfitFLST.GetAt(i) as Armor, true,true)
 		i +=1
 	endWhile
-	ClearOutfit()
+	
 	SetExtra()
 	if GetStage() < 40
 		SetStage(40) 
@@ -249,7 +360,7 @@ EndFunction
 
 Function SetOutfitWedding()
 	LielleOutfitCurrent.SetValueInt(10)
-	
+	ClearOutfit()	
 	LielleAlias.GetActorReference().SetOutfit(LielleEmptyOutfit)
 	int i = 0
 	while i < (LielleOutfitWeddingFLST.GetSize())
@@ -259,7 +370,11 @@ Function SetOutfitWedding()
 	ClearOutfit()
 EndFunction
 
-Function SetOutfitDefault()
+Function SetOutfitDefault(bool abAltOutfit = true)
+
+	ClearOutfit()
+	
+	
 	LielleOutfitCurrent.SetValueInt(0)
 
 	int itemCount = LielleCollegeRobes.GetNumParts()
@@ -268,7 +383,25 @@ Function SetOutfitDefault()
         LielleAlias.GetActorReference().EquipItem((LielleCollegeRobes.GetNthPart(i) as Armor), true,true) ; Auto-equip each item in outfit
         i += 1
     endWhile
+
+	if LielleOutfitAlternate.GetValueInt() == 1 && abAltOutfit
+		SetOutfitAlternate()
+		return
+	endif
+	
+	SetExtra()
+EndFunction
+
+Function SetOutfitAlternate()
+
+	LielleOutfitCurrent.SetValueInt(0)
 	ClearOutfit()
+
+	int i = 0
+	while i < (LielleModularOutfitFLST.GetSize())
+		LielleAlias.GetActorReference().EquipItem(LielleModularOutfitFLST.GetAt(i) as Armor, true,true)
+		i +=1
+	endWhile
 	
 	SetExtra()
 EndFunction
@@ -309,9 +442,6 @@ Function SetExtra()
 	if IcarusWig != NONE
 		Lielle.EquipItem(IcarusWig,true,true) ; Equip her physics wig, if present
 	endif
-	if LielleCSQTattooGlow.IsCompleted()
-		Lielle.EquipItem(TattooGlow,true,true) ; Equips her tattoo glow item, if unlocked
-	endif
 	
 	int i = 0	
 	int totalItems = Lielle.GetNumItems()
@@ -338,7 +468,18 @@ Function ResetOutfits()
 
 EndFunction	
 
-
+String[] Function ReturnOutfits()
+		
+	String[] outfitsList = new string[5]
+	outfitsList[0] = "Default"
+	outfitsList[1] = "Wedding Day"
+	outfitsList[2] = "Misfit Mage"
+	outfitsList[3] = "Dwemer Researcher"
+	outfitsList[4] = "Modular Mage (Alternate Default)"
+		
+	return outfitsList
+	
+EndFunction
 
 Function DebugOutput()
 	

@@ -2,7 +2,6 @@ Scriptname Lielle_BanterTrigger extends ReferenceAlias
 
 ;/ Adapted from portions of jr_modchecker in Lucien /;
 
-
 ReferenceAlias Property Rumarin3D Auto
 
 ReferenceAlias Property AnumLa3D Auto
@@ -17,7 +16,7 @@ ReferenceAlias Property Lielle_Alias Auto
 
 Quest Property LielleCSQBanter02 Auto
 
-Quest Property LielleCSQ_GYH Auto
+Quest Property LielleCSQ_GYH Auto 
 
 LielleCoreScript Property Core Auto
 
@@ -25,31 +24,51 @@ GlobalVariable Property LielleIsGYHInstalled Auto
 
 string msgFlag = "LielleCore - Integrations: "
 
-Function OnLoad()
+Event OnLoad()
 
 	self.CheckAllMods()
+
+	
+	; Start up Extend Banter Quest after filling aliases on LielleCSQMain
+	
 	LielleCSQBanter02.Start()
-EndFunction
+
+	;LielleCSXLucien.Start()
+	
+EndEvent
+
+Event OnPlayerLoadGame()
+
+	self.CheckAllMods()
+
+EndEvent
 
 
 
 Function GYHCompatCheck()
-	if(Game.GetModByName("ImGladYoureHere.esp") != 255 && LielleIsGYHInstalled.GetValueInt() == 0)
+	if(Game.GetModByName("ImGladYoureHere.esp") != 255) && LielleIsGYHInstalled.GetValueInt() == 0
 		Faction disableMainFac = Game.GetFormFromFile(0x0027108d, "ImGladYoureHere.esp") as Faction
 		(Lielle_Alias.GetActorRef()).AddToFaction( disableMainFac)
 	
 		
+		; Get the Quest from the plugin - cast to GYHScript
+		;LielleCSQ_GYH = Game.GetFormFromFile(0x000801, "Lielle-IGYHBackport.esp") as Quest
 		LielleCSQ_GYHScript hugscript = LielleCSQ_GYH as LielleCSQ_GYHScript
-        hugscript.WW42HugFollower = Game.GetFormFromFile(0x00000d62, "ImGladYoureHere.esp") as Quest
         
+		hugscript.WW42HugFollower = Game.GetFormFromFile(0x00000d62, "ImGladYoureHere.esp") as Quest
+        
+		; Get Global form plugin - set value for conditions
+		;LielleIsGYHInstalled = Game.GetFormFromFile(0x000800, "Lielle-IGYHBackport.esp") as GlobalVariable
         LielleIsGYHInstalled.SetValueInt(1)
 		
-		Core.Msg(msgFlag + "IGYH Detected")
+		Core.Msg("LielleCore: IGYH Detected")
     elseif(Game.GetModByName("ImGladYoureHere.esp") == 255 && LielleIsGYHInstalled.GetValueInt() == 1)
         LielleIsGYHInstalled.SetValueInt(0)
-		Core.Msg(msgFlag + "IGYH Removed")
+		Core.Msg("LielleCore: IGYH Removed")
     endif
 EndFunction
+
+
 
 Function ModCheck(ReferenceAlias raFollowerAlias, Int aiFormID, String asFileName)
 

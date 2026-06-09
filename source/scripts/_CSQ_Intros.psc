@@ -10,6 +10,15 @@ bool Property InigoIntro = False Auto Conditional
 
 bool Property SofiaIntro = False Auto Conditional
 
+bool Property RaceTopic = False Auto Conditional
+
+bool property ComplimentPretty = false Auto Conditional
+bool property ComplimentTattoo = false Auto Conditional
+bool property ComplimentMagic = false Auto Conditional
+bool property ComplimentResearch = false Auto Conditional
+bool property DiagPerfume = false Auto Conditional
+
+
 ;bool Property RecorderIntro = False Auto Conditional
 
 ;bool Property LucienIntro = False Auto Conditional

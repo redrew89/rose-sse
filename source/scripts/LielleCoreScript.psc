@@ -1,6 +1,6 @@
 Scriptname LielleCoreScript extends Quest  Conditional
 
-string Property sLielleVersion = "0.5.0 DEV" Auto 
+string Property sLielleVersion = "0.4.7 EA" Auto 
 
 string Property LastVer auto 
 
@@ -23,6 +23,12 @@ bool Property LielleVampireHistory = false Auto Conditional
 bool Property LielleCollegeHistory = false Auto Conditional
 
 bool Property LielleCollegeInsomnia = false Auto Conditional
+
+bool Property LielleWarpaintDiag = false Auto Conditional
+
+bool Property LielleCadmusBookRead = False Auto Conditional
+
+int Property LiellePerfumeDiag = 0 Auto Conditional
 
 string Function LielleVersion()
 	return sLielleVersion

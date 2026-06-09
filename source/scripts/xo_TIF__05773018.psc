@@ -18,6 +18,7 @@ Function Fragment_1(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 LielleXOQ.WeddingEnd()
+;LielleXOQ.Breakup()
 ;END CODE
 EndFunction
 ;END FRAGMENT

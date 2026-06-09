@@ -1,13 +1,8 @@
 Scriptname LielleEmotionManager extends Quest
-{Manages Lielle's emotional expressions, working alongside Conditional Expressions}
 
 ; DISCLAIMER - This script was built with assistance from generative AI
 
 Import Utility
-; Only for compilation - Hopefully shouldn't fail if not present
-;Import CondiExp_Expression_Util 
-;Import CondiExp_util
-
 Import MfgConsoleFuncExt
 
 ; Properties
@@ -62,30 +57,25 @@ Event OnInit()
     sBasicEmotions[6] = "Surprised"
     sBasicEmotions[7] = "Neutral"
     
-	sExtraEmotions = new String[10]
-    sExtraEmotions[0] = "Vulnerable"
-    sExtraEmotions[1] = "Anguish"
-    sExtraEmotions[2] = "Love"
-    sExtraEmotions[3] = "Overjoyed"
-    sExtraEmotions[4] = "Flirty"
-    sExtraEmotions[3] = "Seductive"
-    sExtraEmotions[6] = "Bitter"
-    sExtraEmotions[7] = "Embarrassed"
-    sExtraEmotions[8] = "Flustered"
-	sExtraEmotions[9] = "Wary"
+	sExtraEmotions = new String[11]
+    sExtraEmotions[0] = 	"Vulnerable"
+    sExtraEmotions[1] = 	"Anguish"
+    sExtraEmotions[2] = 	"Love"
+    sExtraEmotions[3] =		"Overjoyed"
+    sExtraEmotions[4] = 	"Flirty"
+    sExtraEmotions[3] = 	"Seductive"
+    sExtraEmotions[6] = 	"Bitter"
+    sExtraEmotions[7] = 	"Embarrassed"
+    sExtraEmotions[8] = 	"Flustered"
+	sExtraEmotions[9] = 	"Wary"
+	sExtraEmotions[10] = 	"Sarcastic"
 	
 	
-    ;Lielle = LielleAlias.GetActorReference()
+    Lielle = LielleAlias.GetActorReference()
     If !Lielle
         Core.Msg(msgFlag + "Failed to get Lielle's reference from alias!", false) ; TODO - This could probably be removed, because we declare Lielle's Actor as a property, now.
         Return
     EndIf
-	
-	; Use SKSE to check if CEE is active
-	;/if !(Game.GetModByName("Conditional Expressions.esp") == 255)
-		Core.Msg(msgFlag + "CEE found. Adding emotions.")
-		bConditionalExpressionsPresent = true
-	EndIf/;
 	
 	If !(SKSE.GetPluginVersion("mfgfix") == -1)
 		bMfgFixPresent = true
@@ -104,220 +94,6 @@ Event OnUpdateGameTime()
 	ResetEmotionState()
 	
 EndEvent
-
-;/ --- REFACTORED TO CALL MfgConsoleFuncExt DIRECTLY - PRESERVED FOR MAINTENANCE.
-Function OLDHandleEmotions(String emotion, int intensity = 100)
-    sCurrentEmotion = emotion
-    HandleEyeTextures(emotion)
-	
-	Core.Msg(msgFlag + "Lielle should be expressing: " + emotion, false)
-    
-    int basicIndex = sBasicEmotions.Find(emotion)
-    int extraIndex = sExtraEmotions.Find(emotion)
-    
-    if basicIndex >= 0 
-		; Handle tears for intense emotions
-		if emotion == "Sad" && intensity >= 90
-			SetTears()
-		elseif emotion == "Fear" && intensity >= 90
-			SetTears()
-		elseif emotion == "Anger" && intensity == 100
-			SetTears()
-		endif
-	 
-        ; Handle effects for specific emotions - Moved this out of logic blocks, so that it still works without CEE.
-        if (emotion == "Anguish" && intensity >= 70) || (emotion == "Vulnerable" && intensity >= 90) || (emotion == "Overjoyed" && intensity >= 70)
-			Utility.Wait(1)
-            SetTears()
-        endif   
-		if (emotion == "Flirty") || (emotion == "Seductive") || (emotion == "Embarrassed") || (emotion == "Flustered")
-			Utility.wait(1)
-			SetBlush()
-		EndIf
-		
-        if bConditionalExpressionsPresent && LielleExpressionDebug.GetValueInt() == 1
-            ; Enhanced basic emotions when CE available
-            if emotion == "Happy"
-				; Warm happiness
-				BrowsUpSmile(intensity, Lielle)
-				Wait(3)
-				Happy(intensity*1.3 as int, Lielle)
-				Wait(3)
-				Smile(intensity, Lielle)
-
-			elseif emotion == "Sad"
-				; Deep sadness
-				LookDown(intensity/2, Lielle, 1)
-				Wait(3)
-				Frown(intensity*1.3 as int, Lielle)
-				Wait(3)
-				Smile(0, Lielle)  ; Ensure no residual smile
-
-			elseif emotion == "Anger" 
-				; Intense anger
-				Frown(intensity*1.3 as int, Lielle)
-				Wait(3)
-				Angry(Lielle)
-				Wait(3)
-				LookLeft(30, Lielle, 1)  ; Quick dismissive look
-
-			elseif emotion == "Fear"
-				; Heightened fear
-				Surprised(intensity*2, Lielle, 1.0)  ; Initial startle
-				Wait(3)
-				Fear(intensity*1.3 as int, Lielle, 3.0)
-				Wait(3)
-				LookDown(40, Lielle, 1)  ; Cowering motion
-
-			elseif emotion == "Puzzled"
-				; Complex confusion
-				BrowsUp(Lielle)
-				Wait(3)
-				Puzzled(intensity*2, Lielle, 4.0)
-				Wait(3)
-				LookRight(20, Lielle, 1)  ; Thoughtful glance
-
-			elseif emotion == "Surprised"
-				; Startled surprise
-				BrowsUp(Lielle)
-				Wait(2)
-				Surprised(intensity, Lielle, 2.0)
-				Wait(3)
-				LookLeft(20, Lielle, 1)  ; Quick reactive glance
-				
-			ElseIf emotion == "Disgust"
-				Disgust(intensity, Lielle)
-				Wait(3)
-				LookDown(30, Lielle, 1)  ; Slight head tilt down for disdain
-				Wait(3)
-				Frown(intensity/2, Lielle)  ; Add some clear disapproval
-				
-            elseif emotion == "Neutral" && bConditionalExpressionsPresent 
-				resetMFGSmooth(Lielle)
-				resetPhonemesSmooth(Lielle)
-				MfgConsoleFuncExt.ResetModifiers(Lielle)
-            endif          
-		Else
-			Core.Msg(msgFlag + "falling back to default expression", false)
-        endif			
-    elseif extraIndex >= 0 && bConditionalExpressionsPresent
-       	HandleSpecialEmotions(emotion, intensity)
-	else
-		return
-    endif    
-	
-	CheckAndClearBlinks()
-	ResetEmotionState()
-	MfgConsoleFuncExt.ResetModifiers(Lielle) 
-EndFunction
-
-; Handle Lielle-specific emotions; return if not able to use CE
-Function OLDHandleSpecialEmotions(String emotion, int intensity = 100)
-    If !bConditionalExpressionsPresent
-		Core.Msg(msgFlag + "falling back to default expression", false)
-        Return
-    EndIf
-    
-    ; Calculate scaled intensity for more subtle expressions
-    int baseIntensity = intensity/2
-    
-    If emotion == "Vulnerable"
-        ; Mix of fear, sadness, and uncertainty
-        Fear(baseIntensity, Lielle, 2.0)
-        Wait(3)
-        LookDown(40, Lielle, 1)
-        Wait(3)
-        Puzzled(30, Lielle, 3.0)
-        
-    ElseIf emotion == "Anguish"
-        ; Deep sorrow and emotional pain
-        LookDown(80, Lielle, 1)
-        Wait(3)
-        Frown(intensity, Lielle)
-        Wait(1.0)
-        Smile(0, Lielle)  ; Ensure no residual smile
-        Wait(3)
-        Fear(intensity, Lielle, 3.0)  ; Use fear for wider eyes/distress
-        Wait(1.0)
-        ;LookDown(intensity, Lielle, 1)  ; End looking down in sorrow
-        
-    ElseIf emotion == "Love"
-        ; Warm affection
-        BrowsUpSmile(baseIntensity, Lielle)
-        Wait(3)
-        Happy(baseIntensity, Lielle)
-        Wait(3)
-        Smile(baseIntensity, Lielle)
-        
-    ElseIf emotion == "Overjoyed"
-        ; Extreme happiness
-        Happy(intensity, Lielle)
-        Wait(3)
-        BrowsUpSmile(intensity, Lielle)
-        Wait(3)
-        Smile(intensity, Lielle)
-        
-    ElseIf emotion == "Flirty"
-        ; Playful interest
-        BrowsUpSmile(baseIntensity, Lielle)
-        Wait(3)
-        LookDown(30, Lielle, 1)
-        Wait(3)
-        Smile(baseIntensity, Lielle)
-        
-    ElseIf emotion == "Seductive"
-        ; More intense flirtation
-        BrowsUpSmile(intensity, Lielle)
-        Wait(3)
-        LookDown(30, Lielle, 1)
-        Wait(8)
-        Smile(intensity, Lielle)
-        Wait(3)
-        LookRight(30, Lielle, 1)
-	 ElseIf emotion == "Bitter"
-        ; Disgust with anger elements
-        Disgust(intensity, Lielle)
-        Wait(3)
-        Frown(intensity, Lielle)
-        Wait(3)
-        LookDown(40, Lielle, 1)
-        
-    ElseIf emotion == "Embarrassed"
-        ; Mix of surprise and bashful behavior
-        Surprised(intensity/2, Lielle, 1.0)
-        Wait(3)
-        LookDown(60, Lielle, 1)
-        Wait(3)
-        BrowsUpSmile(intensity/3, Lielle)
-        
-    ElseIf emotion == "Flustered"
-        ; Rapid shifts showing discomfort
-        Surprised(intensity, Lielle, 1.0)
-        Wait(3)
-        LookLeft(30, Lielle, 1)
-        Wait(3)
-        LookRight(30, Lielle, 1)
-        Wait(3)
-        Puzzled(intensity, Lielle, 2.0)
-	
-	ElseIf emotion == "Wary"
-        ; Mix of puzzlement, fear, and skepticism
-        Puzzled(intensity/2, Lielle, 2.0)
-        Wait(3)
-        LookLeft(30, Lielle, 1)
-        Wait(3)
-        Fear(intensity/3, Lielle, 1.0)
-        Wait(3)
-        Frown(intensity/2, Lielle)
-
-    EndIf
-	
-	CheckAndClearBlinks()
-	ResetEmotionState()
-	MfgConsoleFuncExt.ResetModifiers(Lielle) 
-EndFunction
-/;
-
 
 ; --- REFACTORED CODE TO USE MfgConsoleFuncExt CALLS; SIDE-STEPS CEE SCRIPT DEPENDENCIES
 Function HandleEmotions(String emotion, int intensity = 100)
@@ -360,7 +136,7 @@ Function HandleEmotions(String emotion, int intensity = 100)
             ; Subtle smile with open mouth
             MfgConsoleFuncExt.SetExpression(Lielle, 2, intensity, 0.75) ; Happy expression
             Utility.Wait(0.5)
-            MfgConsoleFuncExt.SetPhoneme(Lielle, 5, intensity/3, 0.75) ; Eee for slight smile
+            ;MfgConsoleFuncExt.SetPhoneme(Lielle, 5, intensity/3, 0.75) ; Eee for slight smile
             
         elseif emotion == "Sad"
             ; Deep sadness
@@ -368,7 +144,7 @@ Function HandleEmotions(String emotion, int intensity = 100)
             MfgConsoleFuncExt.SetExpression(Lielle, 3, intensity*1.3 as int, 0.75) ; Sad expression
             Utility.Wait(0.5)
             ; Slight frown with mouth slightly open for pained expression
-            MfgConsoleFuncExt.SetPhoneme(Lielle, 6, intensity/4, 0.75) ; Eh for slight open mouth
+            ;MfgConsoleFuncExt.SetPhoneme(Lielle, 6, intensity/4, 0.75) ; Eh for slight open mouth
             
         elseif emotion == "Anger" 
             ; Intense anger
@@ -414,7 +190,7 @@ Function HandleEmotions(String emotion, int intensity = 100)
             ; Quick reactive glance
             MfgConsoleFuncExt.SetModifier(Lielle, 9, 20, 1.0) ; LookLeft
             ; Open mouth slightly
-            MfgConsoleFuncExt.SetPhoneme(Lielle, 0, intensity/3, 0.75) ; Aah for surprised open mouth
+            ;MfgConsoleFuncExt.SetPhoneme(Lielle, 0, intensity/3, 0.75) ; Aah for surprised open mouth
             
         ElseIf emotion == "Disgust"
             MfgConsoleFuncExt.SetExpression(Lielle, 6, intensity, 0.75) ; Disgust expression
@@ -433,7 +209,7 @@ Function HandleEmotions(String emotion, int intensity = 100)
     endif    
     
     CheckAndClearBlinks()
-    RegisterForSingleUpdateGameTime(0.1) ; schedule clean up after 6 minutes in game.
+    RegisterForSingleUpdateGameTime(0.05) ; schedule clean up after 5 minutes in game.
 EndFunction
 
 Function HandleSpecialEmotions(String emotion, int intensity = 100)
@@ -450,7 +226,7 @@ Function HandleSpecialEmotions(String emotion, int intensity = 100)
         ; Puzzled expression mixed with fear
         MfgConsoleFuncExt.SetExpression(Lielle, 5, 30, smoothSpeed) ; Puzzled expression
         ; Slight mouth open
-        MfgConsoleFuncExt.SetPhoneme(Lielle, 6, baseIntensity/4, smoothSpeed) ; Eh for slight open mouth
+        ;MfgConsoleFuncExt.SetPhoneme(Lielle, 6, baseIntensity/4, smoothSpeed) ; Eh for slight open mouth
         
     ElseIf emotion == "Anguish"
         ; Deep sorrow and emotional pain
@@ -484,8 +260,8 @@ Function HandleSpecialEmotions(String emotion, int intensity = 100)
         MfgConsoleFuncExt.SetModifier(Lielle, 7, intensity, smoothSpeed) ; BrowUpR
         Utility.Wait(0.5)
         ; Big smile
-        MfgConsoleFuncExt.SetPhoneme(Lielle, 5, intensity, smoothSpeed) ; Eee for big smile
-        MfgConsoleFuncExt.SetPhoneme(Lielle, 0, intensity/2, smoothSpeed) ; Aah for open-mouthed smile
+		;MfgConsoleFuncExt.SetPhoneme(Lielle, 5, intensity, smoothSpeed) ; Eee for big smile
+        ;MfgConsoleFuncExt.SetPhoneme(Lielle, 0, intensity/2, smoothSpeed) ; Aah for open-mouthed smile
         
     ElseIf emotion == "Flirty"
         ; Playful interest
@@ -514,7 +290,7 @@ Function HandleSpecialEmotions(String emotion, int intensity = 100)
         MfgConsoleFuncExt.SetModifier(Lielle, 8, 30, smoothSpeed) ; LookDown
         Utility.Wait(0.5)
         ; Sensual smile
-        MfgConsoleFuncExt.SetPhoneme(Lielle, 5, intensity/2, smoothSpeed) ; Eee for smile
+        ;MfgConsoleFuncExt.SetPhoneme(Lielle, 5, intensity/2, smoothSpeed) ; Eee for smile
         ; Coy look to the side
         MfgConsoleFuncExt.SetModifier(Lielle, 10, 30, smoothSpeed) ; LookRight
         
@@ -533,6 +309,7 @@ Function HandleSpecialEmotions(String emotion, int intensity = 100)
     ElseIf emotion == "Embarrassed"
         ; Mix of surprise and bashful behavior
         MfgConsoleFuncExt.SetExpression(Lielle, 4, intensity/2, smoothSpeed) ; Surprise expression at half intensity
+		MfgConsoleFuncExt.SetExpression(Lielle, 2, intensity, smoothSpeed) ; Happy expression
         Utility.Wait(0.5)
         ; Look down shyly
         MfgConsoleFuncExt.SetModifier(Lielle, 8, 60, smoothSpeed) ; LookDown
@@ -541,12 +318,13 @@ Function HandleSpecialEmotions(String emotion, int intensity = 100)
         MfgConsoleFuncExt.SetModifier(Lielle, 7, intensity/3, smoothSpeed) ; BrowUpR
         Utility.Wait(0.5)
         ; Slight nervous smile
-        MfgConsoleFuncExt.SetPhoneme(Lielle, 5, intensity/4, smoothSpeed) ; Eee for slight smile
+        ;MfgConsoleFuncExt.SetPhoneme(Lielle, 5, intensity/4, smoothSpeed) ; Eee for slight smile
         
     ElseIf emotion == "Flustered"
         ; Rapid shifts showing discomfort
         MfgConsoleFuncExt.SetExpression(Lielle, 4, intensity/2, smoothSpeed) ; Surprise expression
-        ; Raised brows
+        MfgConsoleFuncExt.SetExpression(Lielle, 5, intensity/2, smoothSpeed) 
+		; Raised brows
         MfgConsoleFuncExt.SetModifier(Lielle, 6, intensity/2, smoothSpeed) ; BrowUpL
         MfgConsoleFuncExt.SetModifier(Lielle, 7, intensity/2, smoothSpeed) ; BrowUpR
         Utility.Wait(0.5)
@@ -555,38 +333,39 @@ Function HandleSpecialEmotions(String emotion, int intensity = 100)
         Utility.Wait(0.5)
         MfgConsoleFuncExt.SetModifier(Lielle, 10, 30, 0.5) ; LookRight faster
         Utility.Wait(0.5)
-        ; Mix of puzzled expression
-        MfgConsoleFuncExt.SetExpression(Lielle, 5, intensity/2, smoothSpeed) ; Puzzled expression
+        
         ; Slightly open mouth
         MfgConsoleFuncExt.SetPhoneme(Lielle, 6, intensity/4, smoothSpeed) ; Eh for slight open mouth
     
     ElseIf emotion == "Wary"
         ; Mix of puzzlement, fear, and skepticism
         MfgConsoleFuncExt.SetExpression(Lielle, 5, intensity/2, smoothSpeed) ; Puzzled expression
-        Utility.Wait(0.5)
+        MfgConsoleFuncExt.SetExpression(Lielle, 1, intensity/3, smoothSpeed) ; Fear expression
+		Utility.Wait(0.5)
         ; Suspicious look to the side
         MfgConsoleFuncExt.SetModifier(Lielle, 9, 30, smoothSpeed) ; LookLeft
         ; Slight squint for suspicion
         MfgConsoleFuncExt.SetModifier(Lielle, 12, intensity/4, smoothSpeed) ; SquintL
         MfgConsoleFuncExt.SetModifier(Lielle, 13, intensity/4, smoothSpeed) ; SquintR
         Utility.Wait(0.5)
-        ; Mix with subtle fear
-        MfgConsoleFuncExt.SetExpression(Lielle, 1, intensity/3, smoothSpeed) ; Fear expression
+               
         ; Subtle frown
         MfgConsoleFuncExt.SetModifier(Lielle, 2, intensity/4, smoothSpeed) ; BrowDownL
         MfgConsoleFuncExt.SetModifier(Lielle, 3, intensity/4, smoothSpeed) ; BrowDownR
+		
 	ElseIf emotion == "Sarcastic"
         ; Mix of disgust and mild happiness/enjoyment - playful ribbing and sarcastic responses
         MfgConsoleFuncExt.SetExpression(Lielle, 6, intensity/2, smoothSpeed) ; Disgust expression
-        Utility.Wait(0.5)
+        MfgConsoleFuncExt.SetExpression(Lielle, 2, intensity/4, smoothSpeed) ; Happy expression
+		
+		Utility.Wait(0.5)
         ; Slight eye roll or look to the side
         MfgConsoleFuncExt.SetModifier(Lielle, 10, 25, smoothSpeed) ; LookRight
         ; Subtle smirk with slight brow raise
         MfgConsoleFuncExt.SetModifier(Lielle, 6, intensity/3, smoothSpeed) ; BrowUpL
         MfgConsoleFuncExt.SetModifier(Lielle, 7, intensity/4, smoothSpeed) ; BrowUpR
         Utility.Wait(0.5)
-        ; Mix with mild happiness for the playful aspect
-        MfgConsoleFuncExt.SetExpression(Lielle, 2, intensity/4, smoothSpeed) ; Happy expression
+           
         ; Slight squint for the knowing look
         MfgConsoleFuncExt.SetModifier(Lielle, 12, intensity/5, smoothSpeed) ; SquintL
         MfgConsoleFuncExt.SetModifier(Lielle, 13, intensity/5, smoothSpeed) ; SquintR
@@ -631,23 +410,6 @@ Function SetBlush()
 	; We don't need an argument because the magic effect stops when cast again while active
 	LielleEmotionBlush.Cast(Lielle)
 EndFunction
-
-
-;/ -- REFACTORED TO USE MfgConsoleFuncExt. - PRESERVED FOR MAINTENANCE.
-Function OLDCheckAndClearBlinks()
-    if !Lielle
-        Return
-    endif
-    
-    ; Check both blink modifiers
-    if GetModifier(Lielle, 0) > 0 || GetModifier(Lielle, 1) > 0
-        SetModifier(Lielle, 0, 0)
-        SetModifier(Lielle, 1, 0)
-      Core.Msg(msgFlag + "Cleared stuck blink state", false)
-    endif
-	MfgConsoleFuncExt.ResetModifiers(Lielle) 
-EndFunction
-/;
 
 
 Function CheckAndClearBlinks()
