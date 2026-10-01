@@ -98,6 +98,12 @@ bool	Property bNudeBody				= false		Auto
 bool 	Property bNudeAlways			= false		Auto
 
 String[] 	warpaintOptions 
+
+; Warpaint overlay shelved: her paint lives in the FaceGen tint, and any overlay update on her refreshes the
+; others and makes them flicker. The warpaint options are left out of the page, and a page refresh turns off
+; glow a save may still carry (that removes the overlay - see LielleDynamicAppearanceManager.SetWarpaint).
+; The menu, when enabled, lists colours only: menu position N is manager index N + 1. Set true to restore.
+bool 	bWarpaintOverlayEnabled = false
 String[] 	tattooGlowColors
 
 String[] 	debugOutfitsList
@@ -141,7 +147,7 @@ EndProperty
 int Property iSkinOpt = 0 Auto ; Base skin for LielleDynAppController: 0 - Classic, 1 - Modern
 
 int function GetVersion()
-	return 471 ; Modified semantic versioning - 470 == 0.4.7.0, 500 == 0.5.0.0 - must only ever increase, or SkyUI skips OnVersionUpdate
+	return 472 ; Modified semantic versioning - 470 == 0.4.7.0, 500 == 0.5.0.0 - must only ever increase, or SkyUI skips OnVersionUpdate
 endFunction
 
 event OnVersionUpdate(int a_version)
@@ -155,12 +161,7 @@ EndEvent
 Event OnConfigInit()
 
 	ModName 	= "Lielle - Rose of the North"
-	if bdebugDev
-		Pages = New String[6]
-		Pages[5] = "Advanced"
-	else
-		Pages = New String[5]
-	endif
+	Pages = New String[5] ; testing tools moved to the test suite's own MCM (LielleTest_MCM)
 	Pages[0] 	= "Settings"
 	Pages[1] 	= "Arcane Research"
 	Pages[2] 	= "Credits"
@@ -176,13 +177,12 @@ Event OnConfigInit()
 	
 		;Core.Msg("LielleCore: Detected Overlay Distribution Framework - Enabling Dynamic Appearance 2.0",true)
 		
-		warpaintOptions 			= new String[6]
-		warpaintOptions[0] 			= "Clean Face"
-		warpaintOptions[1] 			= "Rose Red"
-		warpaintOptions[2] 			= "Dwemer Purple"
-		warpaintOptions[3] 			= "Lovestruck Pink"
-		warpaintOptions[4] 			= "Pride Forever!"
-		warpaintOptions[5] 			= "Custom Color"
+		warpaintOptions 			= new String[5]
+		warpaintOptions[0] 			= "Rose Red"
+		warpaintOptions[1] 			= "Dwemer Purple"
+		warpaintOptions[2] 			= "Lovestruck Pink"
+		warpaintOptions[3] 			= "Pride Forever!"
+		warpaintOptions[4] 			= "Custom Color"
 		
 		tattooGlowColors 			= new String[6]
 		tattooGlowColors[0] 		= "Disabled"
@@ -193,8 +193,6 @@ Event OnConfigInit()
 		tattooGlowColors[5] 		= "Custom Color"
 	endif
 	
-	debugOutfitsList = new String[5]
-	debugOutfitsList = Outfits.ReturnOutfits()
 			
 EndEvent
 
@@ -214,7 +212,6 @@ Event OnPageReset(string Page)
 		AddEmptyOption()
 		AddHeaderOption("Debug Options")
 		AddEmptyOption()
-		opt_debugMenu 			= AddToggleOption("Full Debug Options:", bdebugDev)
 		opt_Teleport 			= AddToggleOption("Teleport to Player:", false)
 		opt_CombatReset 		= AddToggleOption("Reset Combat State:", false)
 		opt_AIReset 			= AddToggleOption("Reset AI:" , false)
@@ -269,24 +266,6 @@ Event OnPageReset(string Page)
 		AddTextOption("Study Rank: " , StudyRank.getRank())
 		AddTextOption("Research Quests Completed: " , CoreARQ.LielleARQCount)
 
-	elseif page == "Advanced" 
-		SetCursorPosition(0)
-		SetCursorFillMode(TOP_TO_BOTTOM)
-		AddHeaderOption("Basic Debug Options")  	
-		opt_skipIntro 			= AddToggleOption("Skip Intro Dialogue", false)
-		opt_fAffection 			= AddSliderOption("Affection Adjustment", CoreXO.LielleXOVar,"{3}/" + CoreXO.GetMaxAffection())
-		opt_forceWife			= AddTextOption("Force Marry", "I DO!")
-		
-		AddEmptyOption()
-		AddHeaderOption("ARQ Testing")
-		opt_debugDawn 			= AddToggleOption("Dawnbreaker", false)
-		opt_debugRose 			= AddToggleOption("Sanguine Rose", false)
-		opt_debugRose2 			= AddToggleOption("Sanguine Rose Pt2", false)
-		opt_debugRazor 			= AddToggleOption("Mehrunes' Razor", false)
-		opt_debugGauldur1 		= AddToggleOption("Saarthal Gauldur Fragment", false)
-		opt_debugGauldur2 		= AddToggleOption("Reforged Gauldur Amulet",  false)
-		opt_debugSpellbreak 	= AddToggleOption("Spellbreaker", false)
-		
 	elseif page == "Credits"
 		SetCursorFillMode(TOP_TO_BOTTOM)
 		SetCursorPosition(0)
@@ -387,7 +366,6 @@ Event OnPageReset(string Page)
 		AddTextOption("KS Jewelry: ", CheckIntegration(none,none, Outfits.bWeddingItemsAdded))
 		AddEmptyOption()
 		opt_ResetOutfit = AddTextOption("Reset Current Outfit",none)
-		opt_MenuDebugOutfit = AddMenuOption("Test Outfit:",debugOutfitsList[iMenuSelectOutfit])
 		AddEmptyOption()
 		
 		AddHeaderOption("Systems Integrations")
@@ -450,11 +428,7 @@ Event OnPageReset(string Page)
 			flag_TattooCustom = OPTION_FLAG_DISABLED
 		else
 			; Story Mode OFF: Enable options based on selections
-			if DynAppManager.iMenuSelectWarpaint != 0
-				flag_WarpaintGlow = OPTION_FLAG_NONE
-			else
-				flag_WarpaintGlow = OPTION_FLAG_DISABLED
-			endif
+			flag_WarpaintGlow = OPTION_FLAG_NONE
 
 			if DynAppManager.iMenuSelectWarpaint == 5
 				flag_WarpaintCustom = OPTION_FLAG_NONE
@@ -462,11 +436,7 @@ Event OnPageReset(string Page)
 				flag_WarpaintCustom = OPTION_FLAG_DISABLED
 			endif
 
-			if DynAppManager.iMenuSelectTattoo != 0
-				flag_TattooGlow = OPTION_FLAG_NONE
-			else
-				flag_TattooGlow = OPTION_FLAG_DISABLED
-			endif
+			flag_TattooGlow = OPTION_FLAG_NONE ; turning glow on with the accent at Disabled picks Rose Red (manager)
 
 			if DynAppManager.iMenuSelectTattoo == 5
 				flag_TattooCustom = OPTION_FLAG_NONE
@@ -479,9 +449,15 @@ Event OnPageReset(string Page)
 		AddEmptyOption()
 
 		; Main menus and toggles use flag_MainMenus (disabled when Story Mode is on)
-		opt_PaintGlow = AddToggleOption("Dynamic Warpaint Glow:", DynAppManager.bWarpaintGlow, flag_WarpaintGlow)		
-		opt_MenuWarpaint = AddMenuOption("Dynamic Warpaint:", warpaintOptions[DynAppManager.iMenuSelectWarpaint], flag_MainMenus)		
-		opt_WarpaintCustom = AddColorOption("Custom Color: ", DynAppManager.CUSTOM_PAINT, flag_WarpaintCustom)
+		if bWarpaintOverlayEnabled
+			opt_PaintGlow = AddToggleOption("Dynamic Warpaint Glow:", DynAppManager.bWarpaintGlow, flag_WarpaintGlow)		
+			opt_MenuWarpaint = AddMenuOption("Dynamic Warpaint:", warpaintOptions[WarpaintMenuPos()], flag_MainMenus)		
+			opt_WarpaintCustom = AddColorOption("Custom Color: ", DynAppManager.CUSTOM_PAINT, flag_WarpaintCustom)
+		else
+			opt_PaintGlow = -1 ; option IDs are saved - stale ones could match another option
+			opt_MenuWarpaint = -1
+			opt_WarpaintCustom = -1
+		endif
 		opt_TattooGlow	= AddToggleOption("Tattoo Glow: ", DynAppManager.bTattooGlow, flag_TattooGlow)
 		opt_MenuTattoo = AddMenuOption("Dynamic Tattoo Accent:", tattooGlowColors[DynAppManager.iMenuSelectTattoo], flag_MainMenus)
 		opt_TattooCustom = AddColorOption("Custom Color: ", DynAppManager.CUSTOM_TATT, flag_TattooCustom)
@@ -496,8 +472,8 @@ Event OnOptionMenuOpen(int option)
 	if option == opt_MenuWarpaint
 		if warpaintOptions && warpaintOptions.Length > 0
 			SetMenuDialogOptions(warpaintOptions)
-			SetMenuDialogStartIndex(DynAppManager.iMenuSelectWarpaint)
-			SetMenuDialogDefaultIndex(1)
+			SetMenuDialogStartIndex(WarpaintMenuPos())
+			SetMenuDialogDefaultIndex(0)
 		endif
 	elseif option == opt_MenuTattoo
 		if tattooGlowColors && tattooGlowColors.Length > 0
@@ -505,18 +481,12 @@ Event OnOptionMenuOpen(int option)
 			SetMenuDialogStartIndex(DynAppManager.iMenuSelectTattoo)
 			SetMenuDialogDefaultIndex(1)
 		endif
-	elseif option == opt_MenuDebugOutfit
-		if debugOutfitsList && debugOutfitsList.Length > 0
-			SetMenuDialogOptions(debugOutfitsList)
-			SetMenuDialogStartIndex(iMenuSelectOutfit)
-			SetMenuDialogDefaultIndex(0)
-		endif
 	endif	
 endEvent
 
 
 Event OnOptionColorAccept(int option, int value)
-	if option == opt_WarpaintCustom
+	if option == opt_WarpaintCustom && bWarpaintOverlayEnabled
 		DynAppManager.CUSTOM_PAINT = value
 		DynAppManager.SetWarpaint(5, value, DynAppManager.bWarpaintGlow)
 	elseif option == opt_TattooCustom
@@ -531,35 +501,27 @@ Event OnOptionMenuAccept(int option, int index)
 		return
 	endif
 	
-	if option == opt_MenuWarpaint
+	if option == opt_MenuWarpaint && bWarpaintOverlayEnabled
 		if warpaintOptions && index < warpaintOptions.Length
 			SetMenuOptionValue(opt_MenuWarpaint, warpaintOptions[index])
-			DynAppManager.SetWarpaint(index, DynAppManager.CUSTOM_PAINT, DynAppManager.bWarpaintGlow)
+			DynAppManager.SetWarpaint(index + 1, DynAppManager.CUSTOM_PAINT, DynAppManager.bWarpaintGlow) ; menu has no Clean Face entry
 		endif
 	elseif option == opt_MenuTattoo
 		if tattooGlowColors && index < tattooGlowColors.Length
 			SetMenuOptionValue(opt_MenuTattoo, tattooGlowColors[index])
 			DynAppManager.SetTattoo(index, DynAppManager.CUSTOM_TATT)
 		endif
-	elseif option == opt_MenuDebugOutfit
-		if debugOutfitsList && index < debugOutfitsList.Length
-			SetMenuOptionValue(opt_MenuDebugOutfit, debugOutfitsList[index])
-			if index == 0 
-				Outfits.SetOutfitDefault(false)
-			elseif index == 1
-				Outfits.SetOutfitWedding()
-			elseif index == 2
-				Outfits.SetOutfitMisfit()
-			elseif index == 3
-				Outfits.SetOutfitResearcher()
-			elseif index == 4
-				Outfits.SetOutfitDefault(true)
-			endif
-		endif
 	endif
 	
 	ForcePageReset()
 endEvent
+
+int Function WarpaintMenuPos()
+	if DynAppManager.iMenuSelectWarpaint < 1
+		return 0
+	endif
+	return DynAppManager.iMenuSelectWarpaint - 1
+EndFunction
 
 String Function CheckIntegration(GlobalVariable checkGlobal = none, ReferenceAlias charAlias = none, bool bCheck = false)
 	
@@ -660,7 +622,7 @@ Event OnOptionSelect(int option)
 		Core.LielleNativeHeal = bHealingNative
 		SetToggleOptionValue(option, bHealingNative,false)	
 		
-	elseif option == opt_PaintGlow
+	elseif option == opt_PaintGlow && bWarpaintOverlayEnabled
 		DynAppManager.bWarpaintGlow = !DynAppManager.bWarpaintGlow
 		SetToggleOptionValue(option, DynAppManager.bWarpaintGlow, false)
 		DynAppManager.SetWarpaint(DynAppManager.iMenuSelectWarpaint, DynAppManager.CUSTOM_PAINT, DynAppManager.bWarpaintGlow)
@@ -669,68 +631,6 @@ Event OnOptionSelect(int option)
 		SetToggleOptionValue(option, DynAppManager.bTattooGlow, false)
 		DynAppManager.SetTattoo(DynAppManager.iMenuSelectTattoo, DynAppManager.CUSTOM_TATT, DynAppManager.bTattooGlow)
 		
-	elseif option == opt_skipIntro
-		SetToggleOptionValue(option, true,false)
-		;Set Stage on Lielle's introduction quests
-		LielleARQMain.SetStage(10)
-		LielleCSQmg.SetStage(31)
-		SetToggleOptionValue(option, false,false)
-		
-	elseif option == opt_debugDawn
-		SetToggleOptionValue(option, true)
-		Game.GetPlayer().AddItem(Game.GetForm(320750), 1, true)
-		;Complete Meridia's Daedric Quest
-		DA09.CompleteQuest()
-		SetToggleOptionValue(option, false)
-		
-	elseif option == opt_debugRose
-		SetToggleOptionValue(option, true)
-		Game.GetPlayer().AddItem(Game.GetForm(117558), 1, true)
-		;Complete Sanguine's Daedric Quest
-		DA14.CompleteQuest()
-		SetToggleOptionValue(option, false)
-		
-	elseif option == opt_debugRose2
-		;Teleport player and Lielle to Tel Mythrin; complete Neloth's quest to access staff enchanter.
-		Game.GetPlayer().MoveTo(LielleARQTelMithrynMarker)
-		LielleAlias.GetActorRef().MoveTo(Game.GetPlayer())
-		DLC2TT1.CompleteQuest()
-		debug.notification("You can activate the staff enchanter to trigger the quest.")
-			
-	elseif option == opt_debugRazor
-		SetToggleOptionValue(option, true)
-		Game.GetPlayer().AddItem(Game.GetForm(147666), 1, true)
-		;Complete Dagon's Daedric Quest
-		DA07.CompleteQuest()
-		SetToggleOptionValue(option, false)
-		
-	elseif option == opt_debugGauldur1
-		SetToggleOptionValue(option, true)
-		Game.GetPlayer().AddItem(Game.GetForm(186202), 1, true)
-		;Complete "Under Saarthal"
-		MG02.CompleteQuest()
-		SetToggleOptionValue(option, false)
-		
-	elseif option == opt_debugGauldur2
-		SetToggleOptionValue(option, true)
-		Game.GetPlayer().AddItem(Game.GetForm(186227), 1, true)
-		;Complete "Forbidden Legend"
-		dunGauldursonQST.CompleteQuest()
-		SetToggleOptionValue(option, false)
-	
-	elseif option == opt_debugSpellbreak
-		SetToggleOptionValue(option, true)
-		Game.GetPlayer().AddItem(Game.GetForm(286614), 1, true)
-		DA13.CompleteQuest()
-		SetToggleOptionValue(option, false)
-		
-	elseif option == opt_debugMenu
-		bdebugDev = !bdebugDev
-		SetToggleOptionValue(option, bdebugDev,false)		
-		SetDebug(bdebugDev)
-		OnConfigInit()
-		Debug.MessageBox("You must close and reopen the MCM for the new page to appear.")	
-
 	elseif option == opt_DynAppStoryMode
 		bDynAppStoryMode = !bDynAppStoryMode
 		SetToggleOptionValue(option, bDynAppStoryMode, false)
@@ -760,12 +660,6 @@ Event OnOptionSelect(int option)
 			Outfits.SetBody(0)
 		endif
 	
-	elseif option == opt_forceWife 	
-		Actor Lielle = LielleAlias.GetActorRef()
-		if Lielle.GetRelationshipRank(Game.GetPlayer()) != 4
-			CoreXO.Marry()
-			SetTextOptionValue(option, "NOW AND FOREVER")
-		endif
 	endif
 
 	ForcePageReset()
@@ -775,19 +669,10 @@ endEvent
 
 Event OnOptionSliderOpen(int option)
 
-	if option == opt_fAffection
-		SetSliderDialogStartValue(CoreXO.LielleXOVar)
-		SetSliderDialogRange(0.0, CoreXO.GetMaxAffection())
-		SetSliderDialogInterval(0.25)	
-	endif
-
 EndEvent
 
 Event OnOptionSliderAccept(int option, float value)
 	
-	if option == opt_fAffection
-		CoreXO.SetAffection(Value)
-	endif
 	ForcePageReset()
 	
 EndEvent
@@ -814,7 +699,13 @@ Event OnUpdate()
 	
 	if bNiOverridePresent && DynAppManager
 		; Just call the manager functions
-		DynAppManager.SetWarpaint(DynAppManager.GetWarpaintSelection(), DynAppManager.GetCustomPaintColor(), DynAppManager.GetWarpaintGlow())
+		if bWarpaintOverlayEnabled
+			DynAppManager.SetWarpaint(DynAppManager.GetWarpaintSelection(), DynAppManager.GetCustomPaintColor(), DynAppManager.GetWarpaintGlow())
+		else
+			; Glow off removes any warpaint overlay - including paint applied without the manager (old saves), which
+			; RaceMenu would otherwise keep restoring on every load. Slots without paint are left untouched.
+			DynAppManager.SetWarpaint(DynAppManager.GetWarpaintSelection(), DynAppManager.GetCustomPaintColor(), false)
+		endif
 		DynAppManager.SetTattoo(DynAppManager.GetTattooSelection(), DynAppManager.GetCustomTattColor())
 	endif
 	

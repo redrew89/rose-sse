@@ -64,6 +64,10 @@ Function FadeInBlush()
         Float step = 0.1
         Float alpha = 0.0
         niOverride.AddNodeOverrideString(BlushingActor, isFemale, overlayNode, 9, 0, blushTexture, true)
+        ; Overlay slots keep the shader values their last user left - set tint and glow explicitly, as LielleDynamicTattoo does
+        niOverride.AddNodeOverrideInt(BlushingActor, isFemale, overlayNode, 7, -1, 0xFFFFFF, true) ; ShaderTintColor - white
+        niOverride.AddNodeOverrideInt(BlushingActor, isFemale, overlayNode, 0, -1, 0, true) ; ShaderEmissiveColor - none
+        niOverride.AddNodeOverrideFloat(BlushingActor, isFemale, overlayNode, 1, -1, 0.0, true) ; ShaderEmissiveMultiple - no glow
         While alpha < 1.0 && !shuttingDown
             niOverride.AddNodeOverrideFloat(BlushingActor, isFemale, overlayNode, 8, -1, alpha, true)
             niOverride.ApplyNodeOverrides(BlushingActor)
