@@ -7,7 +7,7 @@ Function Fragment_1(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 ;This script will increase Lielle's XO Value
-(LielleXOQuest as LielleXOScript).XOPlus(1)
+(LielleXOQuest as LielleXOScript).XOPlus(0.6)
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -15,3 +15,5 @@ EndFunction
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
 Quest Property LielleXOQuest  Auto  
+
+FavorDialogueScript Property pFDS  Auto  

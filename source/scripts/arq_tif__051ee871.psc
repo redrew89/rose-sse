@@ -7,6 +7,7 @@ Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 (LielleXOQMain as LielleXOScript).XOPlus(1)
+pFDS.Persuade(akSpeaker)
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -14,3 +15,5 @@ EndFunction
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
 Quest Property LielleXOQMain  Auto  
+
+FavorDialogueScript Property pFDS  Auto  

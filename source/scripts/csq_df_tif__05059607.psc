@@ -8,10 +8,9 @@ Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 ;This is a script
 If Lielle.IsInFaction(CurrentFollowerFaction) == 0
-     (LielleDialogueQuest as LielleFollowerDialog).SetFollower(akSpeaker)
+     (LielleDialogueQuest as LielleFollowerScript).SetFollower(akSpeaker)
 EndIf
 debug.Notification("Lielle will not rest until the College of Winterhold is safe.")
-LielleCSQMG07Labyrintian.Start()
 ;END CODE
 EndFunction
 ;END FRAGMENT

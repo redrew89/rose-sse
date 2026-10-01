@@ -19,7 +19,7 @@ Function Fragment_1(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 If Lielle.IsInFaction(CurrentFollowerFaction)
-(LielleDialogueQuest as LielleFollowerDialog).DismissFollower(0,0)
+(LielleDialogueQuest as LielleFollowerScript).DismissFollower(0,0,akspeaker)
 EndIf
 
 (GetOwningQuest() as LielleARQTimerScript).BeginResearch()

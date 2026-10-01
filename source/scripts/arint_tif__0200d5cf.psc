@@ -6,8 +6,7 @@ Scriptname ARInt_TIF__0200D5CF Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
-getowningquest().setstage(20)
-(LielleXOQuest as LielleXOScript).XOPlus(2)
+(LielleXOQuest as LielleXOScript).XOPlus(0.5)
 ;END CODE
 EndFunction
 ;END FRAGMENT

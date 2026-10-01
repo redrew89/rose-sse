@@ -1,5 +1,5 @@
 ;BEGIN FRAGMENT CODE - Do not edit anything between this and the end comment
-;NEXT FRAGMENT INDEX 5
+;NEXT FRAGMENT INDEX 4
 Scriptname QF_LielleARQGauldurPart_0500E0EC Extends Quest Hidden
 
 ;BEGIN ALIAS PROPERTY LielleRef
@@ -7,12 +7,18 @@ Scriptname QF_LielleARQGauldurPart_0500E0EC Extends Quest Hidden
 ReferenceAlias Property Alias_LielleRef Auto
 ;END ALIAS PROPERTY
 
-;BEGIN FRAGMENT Fragment_4
-Function Fragment_4()
+;BEGIN FRAGMENT Fragment_0
+Function Fragment_0()
 ;BEGIN CODE
-;;This is a fragment
+self.Stop()
+;END CODE
+EndFunction
+;END FRAGMENT
 
-(LielleARQGauldurPart as LielleARQWaitScript).Waiting()
+;BEGIN FRAGMENT Fragment_2
+Function Fragment_2()
+;BEGIN CODE
+SetObjectiveDisplayed(10)
 ;END CODE
 EndFunction
 ;END FRAGMENT

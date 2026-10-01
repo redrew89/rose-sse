@@ -8,8 +8,12 @@ EndEvent
 
 Event OnItemAdded(Form akBaseItem, int aiItemCount, ObjectReference akItemReference, ObjectReference akSourceContainer)
 	;debug.Notification("You found a thing! Lielle has something to say about it!")
-	LielleFGAlias.ForceRefIfEmpty(Lielle)
-	Lielle.EvaluatePackage()
+	if akBaseItem == dunFolgunthurJournal1
+		LielleARQGauldurDaynasJournal.start()
+	elseif akBaseItem == dunGauldurAmulet
+		LielleARQGauldurForceGreet.start()
+	endif
+		
 	;debug.Notification("Lielle's current package is " + Lielle.GetCurrentPackage())
 EndEvent
 
@@ -20,3 +24,7 @@ ReferenceAlias Property LielleFGAlias  Auto
 Armor Property dunGauldurAmulet Auto
 
 Book Property dunFolgunthurJournal1 Auto
+
+Scene Property LielleARQGauldurDaynasJournal Auto
+
+Scene Property LielleARQGauldurForceGreet Auto

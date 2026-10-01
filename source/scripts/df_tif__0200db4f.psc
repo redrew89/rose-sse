@@ -6,7 +6,7 @@ Scriptname DF_TIF__0200DB4F Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
-(GetOwningQuest() as LielleFollowerDialog).FollowerWait()
+(GetOwningQuest() as LielleFollowerScript).FollowerWait()
 ;END CODE
 EndFunction
 ;END FRAGMENT

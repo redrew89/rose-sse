@@ -7,7 +7,7 @@ Function Fragment_3(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 GetOwningQuest().setstage(30)
-(LielleXOQuest as LielleXOScript).XOPlus(1.0)
+(LielleXOQuest as LielleXOScript).XOPlus(0.75)
 ;END CODE
 EndFunction
 ;END FRAGMENT

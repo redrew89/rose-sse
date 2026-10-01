@@ -6,13 +6,12 @@ Scriptname CSQ_TIF__05063824 Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
-;;This is a script
-Lielle.ClearExpressionOverride()
-;;Lielle is happy, now that the bad Thalmor guy is dead.
+Emotions.UnlockEmotion()
 ;END CODE
 EndFunction
 ;END FRAGMENT
 
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
-Actor Property Lielle  Auto  
+
+LielleEmotionManager Property Emotions  Auto  

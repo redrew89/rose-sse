@@ -6,8 +6,6 @@ Scriptname ARQ_TIF__0500AFDC Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
-;;This is a frag
-
 LielleCSQmg.SetObjectiveCompleted(10)
 LielleCSQmg.SetObjectiveCompleted(20)
 ;END CODE

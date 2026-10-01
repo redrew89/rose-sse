@@ -1,0 +1,364 @@
+Scriptname LielleEmotionManager extends Quest
+{Manages Lielle's emotional expressions, working alongside Conditional Expressions}
+
+; DISCLAIMER - This script was built with assistance from generative AI
+
+Import Utility
+; Only for compilation - Hopefully shouldn't fail if not present
+Import CondiExp_Expression_Util 
+Import CondiExp_util
+
+
+; Properties
+ReferenceAlias Property LielleAlias Auto  ; Set in CK
+String Property sCurrentEmotion = "Neutral" Auto
+Float Property EyeResetTimer = 60.0 Auto
+
+; Internal detection properties
+; Faction Property CEIgnoreFaction Auto ; Filled at runtime - exclusion faction for suspending while in dialogue
+Bool Property bConditionalExpressionsPresent = false Auto
+
+; Eye textures
+TextureSet Property DefaultEyes Auto
+TextureSet Property DilatedEyes Auto
+TextureSet Property ConstrictedEyes Auto
+
+; Spell for tears effect
+Spell Property LielleEmotionTears Auto
+MagicEffect Property LielleEmotionTearsFX Auto
+
+; Internal variables
+Actor Property Lielle auto
+
+Bool bEyeUpdateRegistered = false
+String[] sBasicEmotions 
+String[] sExtraEmotions
+
+Function ResetEmotionManager()
+	debug.trace("LielleEmotionManager: Performing system maintenance. Stand by.")
+	OnInit()
+EndFunction
+
+Event OnInit()
+   
+	; Initialize our string arrays for emotion types
+	sBasicEmotions = new String[8]
+    sBasicEmotions[0] = "Happy"
+    sBasicEmotions[1] = "Sad"
+    sBasicEmotions[2] = "Anger"
+    sBasicEmotions[3] = "Fear"
+    sBasicEmotions[4] = "Puzzled"
+    sBasicEmotions[5] = "Disgust"
+    sBasicEmotions[6] = "Surprised"
+    sBasicEmotions[7] = "Neutral"
+    
+	sExtraEmotions = new String[10]
+    sExtraEmotions[0] = "Vulnerable"
+    sExtraEmotions[1] = "Anguish"
+    sExtraEmotions[2] = "Love"
+    sExtraEmotions[3] = "Overjoyed"
+    sExtraEmotions[4] = "Flirty"
+    sExtraEmotions[5] = "Seductive"
+    sExtraEmotions[6] = "Bitter"
+    sExtraEmotions[7] = "Embarrassed"
+    sExtraEmotions[8] = "Flustered"
+	sExtraEmotions[9] = "Wary"
+	
+	
+    ;Lielle = LielleAlias.GetActorReference()
+    If !Lielle
+        Debug.Trace("LielleEmotionManager: Failed to get Lielle's reference from alias!", 2)
+        Return
+    EndIf
+	;/ Moved the faction form fill to this event, as we're not calling CheckForConditionalExpressions()	
+	if CEIgnoreFaction == none || !bConditionalExpressionsPresent
+		CEIgnoreFaction = Game.GetFormFromFile(0x000D65, "Conditional Expressions.esp") as Faction
+	endif
+	if CEIgnoreFaction
+		bConditionalExpressionsPresent = true
+		debug.Trace("LielleEmotionManager: CEE faction found.")
+		Lielle.AddToFaction(CEIgnoreFaction)
+		debug.trace("LielleEmotionManager: Added Lielle to CEE dialogue condition exclusion faction.")
+	endif /;
+	
+	; We might not even need the faction. Just use SKSE to check if CEE is active
+	if !(Game.GetModByName("Conditional Expressions.esp") == 255)
+		Debug.Trace("LielleEmotionManager: CEE found. Adding emotions.")
+		;Debug.Notification("LielleEmotionManager: CEE found. Adding emotions.")
+		bConditionalExpressionsPresent = true
+	EndIf
+	; Initialize neutral state
+    ResetEmotionState()
+EndEvent
+
+Event OnUpdateGameTime()
+	
+	ResetEmotionState()
+	
+EndEvent
+
+
+Function HandleEmotions(String emotion, int intensity = 100)
+    sCurrentEmotion = emotion
+    HandleEyeTextures(emotion)
+	
+    debug.trace("LielleEmotionManager: Lielle should be expressing: " + emotion)
+    
+    int basicIndex = sBasicEmotions.Find(emotion)
+    int extraIndex = sExtraEmotions.Find(emotion)
+    
+    if basicIndex >= 0
+		; Handle tears for intense emotions
+		if emotion == "Sad" && intensity >= 90
+			SetTears()
+		elseif emotion == "Fear" && intensity >= 90
+			SetTears()
+		elseif emotion == "Anger" && intensity == 100
+			SetTears()
+		endif
+
+        if bConditionalExpressionsPresent
+            ; Enhanced basic emotions when CE available
+            if emotion == "Happy"
+				; Warm happiness
+				BrowsUpSmile(intensity, Lielle)
+				Wait(0.3)
+				Happy(intensity*1.5 as int, Lielle)
+				Wait(0.5)
+				Smile(intensity, Lielle)
+
+			elseif emotion == "Sad"
+				; Deep sadness
+				;LookDown(intensity/2, Lielle, 0.1)
+				Wait(0.3)
+				Frown(intensity*1.5 as int, Lielle)
+				Wait(0.5)
+				Smile(0, Lielle)  ; Ensure no residual smile
+
+			elseif emotion == "Anger" && intensity >= 50
+				; Intense anger
+				Frown(intensity*1.5 as int, Lielle)
+				Wait(0.3)
+				Angry(Lielle)
+				Wait(0.5)
+				;LookLeft(30, Lielle, 0.1)  ; Quick dismissive look
+
+			elseif emotion == "Fear"
+				; Heightened fear
+				Surprised(intensity*2, Lielle, 1.0)  ; Initial startle
+				Wait(0.3)
+				Fear(intensity*1.5 as int, Lielle, 3.0)
+				Wait(0.5)
+				;LookDown(40, Lielle, 0.1)  ; Cowering motion
+
+			elseif emotion == "Puzzled"
+				; Complex confusion
+				BrowsUp(Lielle)
+				Wait(0.3)
+				Puzzled(intensity*2, Lielle, 4.0)
+				Wait(0.5)
+				;LookRight(20, Lielle, 0.1)  ; Thoughtful glance
+
+			elseif emotion == "Surprised"
+				; Startled surprise
+				BrowsUp(Lielle)
+				Wait(0.2)
+				Surprised(intensity, Lielle, 2.0)
+				Wait(0.3)
+				;LookLeft(20, Lielle, 0.1)  ; Quick reactive glance
+				
+			ElseIf emotion == "Disgust"
+				Disgust(intensity, Lielle)
+				Wait(0.3)
+				;LookDown(30, Lielle, 0.1)  ; Slight head tilt down for disdain
+				Wait(0.5)
+				Frown(intensity/2, Lielle)  ; Add some clear disapproval
+				
+            elseif emotion == "Neutral" && bConditionalExpressionsPresent 
+				resetMFGSmooth(Lielle)
+				resetPhonemesSmooth(Lielle)
+            endif          
+            
+        endif			
+    elseif extraIndex >= 0 && bConditionalExpressionsPresent
+        HandleSpecialEmotions(emotion, intensity)
+        ; Handle tears for specific emotions
+        if (emotion == "Anguish" && intensity >= 70) || (emotion == "Vulnerable" && intensity >= 90) || (emotion == "Overjoyed" && intensity >= 70)
+            SetTears()
+        endif     
+    endif    
+	
+	CheckAndClearBlinks()
+	ResetEmotionState()
+	MfgConsoleFuncExt.ResetModifiers(Lielle) 
+EndFunction
+
+; Handle Lielle-specific emotions; return if not able to use CE
+Function HandleSpecialEmotions(String emotion, int intensity = 100)
+    If !bConditionalExpressionsPresent
+        Return
+    EndIf
+    
+    ; Calculate scaled intensity for more subtle expressions
+    int baseIntensity = intensity/2
+    
+    If emotion == "Vulnerable"
+        ; Mix of fear, sadness, and uncertainty
+        Fear(baseIntensity, Lielle, 2.0)
+        Wait(0.5)
+        ;LookDown(40, Lielle, 0.1)
+        Wait(0.5)
+        Puzzled(30, Lielle, 3.0)
+        
+    ElseIf emotion == "Anguish"
+        ; Deep sorrow and emotional pain
+        ;LookDown(80, Lielle, 0.1)
+        Wait(0.5)
+        Frown(intensity, Lielle)
+        Wait(1.0)
+        Smile(0, Lielle)  ; Ensure no residual smile
+        Wait(0.5)
+        Fear(intensity, Lielle, 3.0)  ; Use fear for wider eyes/distress
+        Wait(1.0)
+        ;LookDown(intensity, Lielle, 0.1)  ; End looking down in sorrow
+        
+    ElseIf emotion == "Love"
+        ; Warm affection
+        BrowsUpSmile(baseIntensity, Lielle)
+        Wait(0.5)
+        Happy(baseIntensity, Lielle)
+        Wait(0.5)
+        Smile(baseIntensity, Lielle)
+        
+    ElseIf emotion == "Overjoyed"
+        ; Extreme happiness
+		if intensity >= 80
+            SetTears()
+        endif
+        Happy(intensity, Lielle)
+        Wait(0.5)
+        BrowsUpSmile(intensity, Lielle)
+        Wait(0.5)
+        Smile(intensity, Lielle)
+        
+    ElseIf emotion == "Flirty"
+        ; Playful interest
+        BrowsUpSmile(baseIntensity, Lielle)
+        Wait(0.5)
+        ;LookDown(30, Lielle, 0.1)
+        Wait(0.5)
+        Smile(baseIntensity, Lielle)
+        
+    ElseIf emotion == "Seductive"
+        ; More intense flirtation
+        BrowsUpSmile(intensity, Lielle)
+        Wait(0.5)
+        ;LookDown(50, Lielle, 0.1)
+        Wait(0.8)
+        Smile(intensity, Lielle)
+        Wait(0.5)
+        ;LookRight(30, Lielle, 0.1)
+	 ElseIf emotion == "Bitter"
+        ; Disgust with anger elements
+        Disgust(intensity, Lielle)
+        Wait(0.5)
+        Frown(intensity, Lielle)
+        Wait(0.5)
+        ;LookDown(40, Lielle, 0.1)
+        
+    ElseIf emotion == "Embarrassed"
+        ; Mix of surprise and bashful behavior
+        Surprised(intensity/2, Lielle, 1.0)
+        Wait(0.5)
+        ;LookDown(60, Lielle, 0.1)
+        Wait(0.5)
+        BrowsUpSmile(intensity/3, Lielle)
+        
+    ElseIf emotion == "Flustered"
+        ; Rapid shifts showing discomfort
+        Surprised(intensity, Lielle, 1.0)
+        Wait(0.3)
+        ;LookLeft(30, Lielle, 0.1)
+        Wait(0.3)
+        ;LookRight(30, Lielle, 0.1)
+        Wait(0.3)
+        Puzzled(intensity, Lielle, 2.0)
+	
+	ElseIf emotion == "Wary"
+        ; Mix of puzzlement, fear, and skepticism
+        Puzzled(intensity/2, Lielle, 2.0)
+        Wait(0.3)
+        ;LookLeft(30, Lielle, 0.1)
+        Wait(0.5)
+        Fear(intensity/3, Lielle, 1.0)
+        Wait(0.3)
+        Frown(intensity/2, Lielle)
+
+    EndIf
+	
+	CheckAndClearBlinks()
+	ResetEmotionState()
+	MfgConsoleFuncExt.ResetModifiers(Lielle) 
+EndFunction
+
+Function HandleEyeTextures(String emotion)
+    If !Lielle
+        Return
+    EndIf
+    
+    If emotion == "Flirty" || emotion == "Seductive" || emotion == "Love" || emotion == "Overjoyed" || emotion == "Anger" || emotion == "Surprised" || emotion == "Flustered"
+        Lielle.SetEyeTexture(DilatedEyes)
+        If !bEyeUpdateRegistered
+            RegisterForSingleUpdateGameTime(EyeResetTimer)
+            bEyeUpdateRegistered = true
+        EndIf
+    ElseIf emotion == "Fear" || emotion == "Anguish" || emotion == "Disgust" || emotion == "Bitter"
+        Lielle.SetEyeTexture(ConstrictedEyes)
+        If !bEyeUpdateRegistered
+            RegisterForSingleUpdateGameTime(EyeResetTimer)
+            bEyeUpdateRegistered = true
+        EndIf
+    Else
+        Lielle.SetEyeTexture(DefaultEyes)
+        bEyeUpdateRegistered = false
+        UnregisterForUpdateGameTime()
+    EndIf
+EndFunction
+
+
+Function SetTears()
+	; We don't need an argument because the magic effect stops when cast again while active
+	LielleEmotionTears.Cast(Lielle)
+EndFunction
+
+
+Function CheckAndClearBlinks()
+    if !Lielle
+        Return
+    endif
+    
+    ; Check both blink modifiers
+    if GetModifier(Lielle, 0) > 0 || GetModifier(Lielle, 1) > 0
+        SetModifier(Lielle, 0, 0)
+        SetModifier(Lielle, 1, 0)
+        Debug.Trace("LielleEmotionManager: Cleared stuck blink state")
+    endif
+	MfgConsoleFuncExt.ResetModifiers(Lielle) 
+EndFunction
+
+Function ResetEmotionState()
+       
+	debug.trace("LielleEmotionManager: Clearing a the current emotion.")
+	Utility.wait(0.1)
+    sCurrentEmotion = "Neutral"
+    if Lielle.HasMagicEffect(LielleEmotionTearsFX)
+        SetTears()
+    endif
+    HandleEyeTextures("Neutral")
+	CheckAndClearBlinks()
+	
+    If bConditionalExpressionsPresent
+		resetMFGSmooth(Lielle)
+		resetPhonemesSmooth(Lielle)		
+    EndIf
+EndFunction

@@ -7,7 +7,7 @@ Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 ;;this is a script
-(LielleDialogueQuest as LielleFollowerDialog).DismissFollower(0,0)
+(LielleDialogueQuest as LielleFollowerScript).DismissFollower(0,0,akspeaker)
 ;END CODE
 EndFunction
 ;END FRAGMENT

@@ -2,21 +2,21 @@
 ;NEXT FRAGMENT INDEX 2
 Scriptname ARQ_TIF__0200EBE8 Extends TopicInfo Hidden
 
-;BEGIN FRAGMENT Fragment_0
-Function Fragment_0(ObjectReference akSpeakerRef)
-Actor akSpeaker = akSpeakerRef as Actor
-;BEGIN CODE
-getowningquest().setstage(40)
-GauldurNext.Start()
-;END CODE
-EndFunction
-;END FRAGMENT
-
 ;BEGIN FRAGMENT Fragment_1
 Function Fragment_1(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 (LielleXOQuest as LielleXOScript).XOMinus(1)
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_0
+Function Fragment_0(ObjectReference akSpeakerRef)
+Actor akSpeaker = akSpeakerRef as Actor
+;BEGIN CODE
+GauldurNext.Start()
+getowningquest().setstage(40)
 ;END CODE
 EndFunction
 ;END FRAGMENT

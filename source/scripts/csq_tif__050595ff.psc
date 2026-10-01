@@ -6,9 +6,7 @@ Scriptname CSQ_TIF__050595FF Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
-;;This is a script
-Lielle.SetExpressionOverride(8, 80)
-;;Lielle is ANGRY!
+Emotions.LockEmotion("Anger",100)
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -16,3 +14,5 @@ EndFunction
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
 Actor Property Lielle  Auto  
+
+LielleEmotionManager Property Emotions  Auto  

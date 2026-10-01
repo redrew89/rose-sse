@@ -7,8 +7,6 @@ Function Fragment_5(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 GetOwningQuest().SetStage(15)
-
-Game.GetPlayer().RemoveItem(GauldurPart)
 ;END CODE
 EndFunction
 ;END FRAGMENT

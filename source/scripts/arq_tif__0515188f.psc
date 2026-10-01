@@ -7,7 +7,7 @@ Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 GetOwningQuest().SetStage(50)
-(LielleDialogueQuest as LielleFollowerDialog).SetFollower(akSpeaker)
+(LielleDialogueQuest as LielleFollowerScript).SetFollower(akSpeaker)
 ;END CODE
 EndFunction
 ;END FRAGMENT

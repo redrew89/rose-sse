@@ -6,7 +6,7 @@ Scriptname ARQ_TIF__0515187E Extends TopicInfo Hidden
 Function Fragment_1(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
-(LielleDialogueQuest as LielleFollowerDialog).DismissFollower(0,0)
+(LielleDialogueQuest as LielleFollowerScript).DismissFollower(0,0,akspeaker)
 ;END CODE
 EndFunction
 ;END FRAGMENT

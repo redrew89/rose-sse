@@ -6,7 +6,7 @@ Scriptname ARQ_TIF__05165CC0 Extends TopicInfo Hidden
 Function Fragment_1(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
-Lielle.AddSpell(ARQDawnRune)
+;Turns out giving NPCs rune spells breaks their AI
 ;END CODE
 EndFunction
 ;END FRAGMENT

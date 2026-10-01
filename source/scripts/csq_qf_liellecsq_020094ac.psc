@@ -1,42 +1,80 @@
 ;BEGIN FRAGMENT CODE - Do not edit anything between this and the end comment
-;NEXT FRAGMENT INDEX 4
+;NEXT FRAGMENT INDEX 15
 Scriptname CSQ_QF_LielleCSQ_020094AC Extends Quest Hidden
 
-;BEGIN ALIAS PROPERTY RefLielleAlias
+;BEGIN ALIAS PROPERTY EstormoAlias
 ;ALIAS PROPERTY TYPE ReferenceAlias
-ReferenceAlias Property Alias_RefLielleAlias Auto
+ReferenceAlias Property Alias_EstormoAlias Auto
 ;END ALIAS PROPERTY
 
-;BEGIN ALIAS PROPERTY ARQMarkerAlias
+;BEGIN ALIAS PROPERTY LielleAlias
 ;ALIAS PROPERTY TYPE ReferenceAlias
-ReferenceAlias Property Alias_ARQMarkerAlias Auto
+ReferenceAlias Property Alias_LielleAlias Auto
 ;END ALIAS PROPERTY
 
-;BEGIN ALIAS PROPERTY LielleMG03Alias
+;BEGIN ALIAS PROPERTY OrthornAlias
 ;ALIAS PROPERTY TYPE ReferenceAlias
-ReferenceAlias Property Alias_LielleMG03Alias Auto
+ReferenceAlias Property Alias_OrthornAlias Auto
 ;END ALIAS PROPERTY
 
-;BEGIN ALIAS PROPERTY PlayerAlias
+;BEGIN ALIAS PROPERTY AncanoAlias
 ;ALIAS PROPERTY TYPE ReferenceAlias
-ReferenceAlias Property Alias_PlayerAlias Auto
+ReferenceAlias Property Alias_AncanoAlias Auto
 ;END ALIAS PROPERTY
 
-;BEGIN ALIAS PROPERTY LielleMG05Alias
-;ALIAS PROPERTY TYPE ReferenceAlias
-ReferenceAlias Property Alias_LielleMG05Alias Auto
-;END ALIAS PROPERTY
-
-;BEGIN FRAGMENT Fragment_0
-Function Fragment_0()
+;BEGIN FRAGMENT Fragment_11
+Function Fragment_11()
 ;BEGIN CODE
-LielleARQIntro.Start()
+; MG completion check
+
+if MG08.GetStage() == 200
+  self.SetStage(40)
+else
+  self.setstage(5)
+endif
+
+
+;Start misc quests
+
+LielleCSQMisc01.Start()
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_7
+Function Fragment_7()
+;BEGIN CODE
+SetObjectiveCompleted(10)
+SetObjectiveCompleted(20)
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_13
+Function Fragment_13()
+;BEGIN CODE
+XO.XOPlus(2.5)
+
+
+if CadmusBookAlias && LielleSleepMarker
+  CadmusBookAlias.GetReference().Moveto(LielleSleepMarker.GetReference())
+endif
 ;END CODE
 EndFunction
 ;END FRAGMENT
 
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
-Quest Property LielleQuestRef  Auto  
 
-Quest Property LielleARQIntro  Auto  
+Quest Property MG08  Auto  
+
+Quest Property LielleCSQMisc01  Auto  
+
+
+LielleXOScript Property XO  Auto  
+
+LielleEmotionManager Property Emotions  Auto  
+
+ReferenceAlias Property CadmusBookAlias  Auto  
+
+ReferenceAlias Property LielleSleepMarker Auto 

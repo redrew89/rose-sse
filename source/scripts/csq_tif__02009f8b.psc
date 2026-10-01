@@ -8,11 +8,12 @@ Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 getowningquest().setstage(20)
 GetOwningQuest().SetObjectiveDisplayed(20)
-ARQRef.Start()
+LielleCSQmgLeadPlayerToScene.Start()
 ;END CODE
 EndFunction
 ;END FRAGMENT
 
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
-Quest Property ARQRef  Auto  
+
+Scene Property LielleCSQmgLeadPlayerToScene  Auto  

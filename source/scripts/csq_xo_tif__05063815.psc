@@ -7,7 +7,7 @@ Function Fragment_1(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 ;;this is a frag
-(LielleXOQMain as LielleXOScript).XOMinus(1)
+(LielleXOQMain as LielleXOScript).XOMinus(0.25)
 ;END CODE
 EndFunction
 ;END FRAGMENT

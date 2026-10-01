@@ -7,8 +7,11 @@ Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 GetOwningQuest().SetObjectiveCompleted(10)
+Game.GetPlayer().AddItem(DA09Dawnbreaker)
 ;END CODE
 EndFunction
 ;END FRAGMENT
 
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
+
+WEAPON Property DA09Dawnbreaker  Auto  

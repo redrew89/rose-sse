@@ -8,11 +8,10 @@ Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 GetOwningQuest().SetStage(10)
 GetOwningQuest().SetObjectiveDisplayed(10)
-ARQRef.Start()
 ;END CODE
 EndFunction
 ;END FRAGMENT
 
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
-Quest Property ARQRef Auto  
+

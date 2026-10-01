@@ -2,11 +2,6 @@
 ;NEXT FRAGMENT INDEX 15
 Scriptname QF_LielleARQRose_051EE860 Extends Quest Hidden
 
-;BEGIN ALIAS PROPERTY LielleFGAlias
-;ALIAS PROPERTY TYPE ReferenceAlias
-ReferenceAlias Property Alias_LielleFGAlias Auto
-;END ALIAS PROPERTY
-
 ;BEGIN ALIAS PROPERTY LielleAlias
 ;ALIAS PROPERTY TYPE ReferenceAlias
 ReferenceAlias Property Alias_LielleAlias Auto
@@ -20,7 +15,7 @@ LielleARQTimerScript kmyQuest = __temp as LielleARQTimerScript
 ;END AUTOCAST
 ;BEGIN CODE
 kmyQuest.EndResearch()
-Self.SetObjectiveCompleted(10)
+Self.SetObjectiveCompleted(15)
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -35,6 +30,8 @@ LielleARQStaffBenchEnabler kmyQuest = __temp as LielleARQStaffBenchEnabler
 If LielleARQStaffCheck.GetValueInt() == 1
            kmyQuest.DoTheThing()
 EndIf
+SetObjectiveCompleted(10)
+SetObjectiveDisplayed(15)
 ;END CODE
 EndFunction
 ;END FRAGMENT

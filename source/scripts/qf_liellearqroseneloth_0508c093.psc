@@ -1,10 +1,15 @@
 ;BEGIN FRAGMENT CODE - Do not edit anything between this and the end comment
-;NEXT FRAGMENT INDEX 2
+;NEXT FRAGMENT INDEX 4
 Scriptname QF_LielleARQRoseNeloth_0508C093 Extends Quest Hidden
 
 ;BEGIN ALIAS PROPERTY LielleAlias
 ;ALIAS PROPERTY TYPE ReferenceAlias
 ReferenceAlias Property Alias_LielleAlias Auto
+;END ALIAS PROPERTY
+
+;BEGIN ALIAS PROPERTY DLC2EnchanterAlias
+;ALIAS PROPERTY TYPE ReferenceAlias
+ReferenceAlias Property Alias_DLC2EnchanterAlias Auto
 ;END ALIAS PROPERTY
 
 ;BEGIN ALIAS PROPERTY NelothAlias
@@ -20,8 +25,17 @@ LielleARQTimerScript kmyQuest = __temp as LielleARQTimerScript
 ;END AUTOCAST
 ;BEGIN CODE
 kmyQuest.EndResearch()
-Self.SetObjectiveCompleted(10)
-LielleARQStaffCheck.SetValueInt(1)
+Self.SetObjectiveCompleted(15)
+Core.LielleARQStaffCheck = true
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_2
+Function Fragment_2()
+;BEGIN CODE
+SetObjectiveCompleted(10)
+setObjectiveDisplayed(15)
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -30,4 +44,7 @@ EndFunction
 
 Quest Property LielleDialogueQuest  Auto  
 
-GlobalVariable Property LielleARQStaffCheck  Auto  
+;GlobalVariable Property LielleARQStaffCheck  Auto  
+;Old structure. Now using quest script variable.
+
+LielleCoreScript Property Core Auto

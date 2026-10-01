@@ -1,0 +1,2 @@
+Scriptname ARQSoulStealScript extends Quest
+

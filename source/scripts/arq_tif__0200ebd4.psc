@@ -8,8 +8,7 @@ Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 getowningquest().setstage(40)
 LielleARQGauldur.setstage(10)
-Game.GetPlayer().AddItem(GauldurPart)
-(LielleDialogFollowerQst as LielleFollowerDialog).SetFollower(akspeaker)
+(LielleDialogFollowerQst as LielleFollowerScript).SetFollower(akspeaker)
 ;END CODE
 EndFunction
 ;END FRAGMENT

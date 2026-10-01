@@ -6,9 +6,7 @@ Scriptname ARQ_TIF__050544DE Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
-;This is a script
 Game.GetPlayer().AddItem(dunGauldurAmuletARQ)
-GetOwningQuest().SetStage(50)
 ;END CODE
 EndFunction
 ;END FRAGMENT

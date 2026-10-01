@@ -1,0 +1,107 @@
+Lielle 0.4.7 Changelog
+
+ Added new falmer/dwarven dungeon location: Mnzeft
+ Added new Arcane Research Quest: Field Work
+ Added new Arcane Research Quest: The Anatomy of Healing
+ Revised interaction with Sofia to better reflect backstory of both characters, including a new backstory element for Lielle
+ Added new combat interrupt behavior when encountering frostbite spiders, including a one-time dialogue
+ Removed non-free music resources 
+ Removed 'Drew's Doodad' debugging item and accompanying dialogue tree. Now replaced by MCM
+ Carried over revisions made in 0.4.x to fix scene order issues during the Gauldur Amulet quest commentary
+ Minor story and dialogue additions and revisions, including a universal catch for player's who might use Legacy of the Dragonborn; now they won't lose out on an artifact for the museum
+ Fixed a file structure oversight that caused a (mostly harmless) file conflict with Ashara Imperial Outfit
+ Textual revisions to Lielle's Journal, to reflect additions to backstory, as well as changes to Lielle's rank at the College
+ Added new dialogue within Lielle's research topic, and during the College of Winterhold questline
+ Retuned the conditions on a number of idles, so they (hopefully) fire less often. Particularly, her "wait up" lines
+ Textual revisions on a number of dialogues, to bring the writing style within Bethesda's established style ("Alright" vs "All right")
+ Full revisions to Affection, adds Favorability as a delta metric for calculating Affection changes, scripted logic to calculate Favorability based on player choices and character creation
+ Rebalanced Affection changes via dialogue; the amount of affection gained or lost through dialogue has been reduced to less than whole integer amounts, in most cases. 
+ Added expanded functionality for non-dialogue Affection events with commentary, using tracked stats to trigger reactions based on player decisions (persuasion, intimidation, bribery, using skooma or drinking excessively, etc). Responses may vary based on current Affection.
+ Added patchless detection and integration for outfits from West Wind Misfit Mage and Dwemer Researcher Armor and Modular Mage; install one or both outfit mods. This feature lets Lielle dynamically change outfits based on weather, location, and specific story events. Finding the Misfit Mage chest is the first event to uncover
+ Also added patchless support for Cloaks and Capes, now Lielle will equip various capes, depending on her chosen outfit, when the weather turns poor
+ Note that the outfit feature offers limited player-choice in what outfit Lielle might wear, as well as an option to disable outfit switching and cloak equipping via dialogue. I plan to eventually expand it to player-provided options, for different situations, gated by Affection
+ Added patchless support for KS Jewelry SSE, which enhances Lielle's wedding outfit, if installed, as well as KS Hairdos wigs component
+ Added Outfit Modesty Framework, leveraging KID. Lielle will now object to outfits and armors she finds too saucy or revealing. Piggy-backs existing keyword resources, including SLA and ORF keywords
+ Restructured and made slight edits to Lielle's marriage process. She will now require a two-week betrothal before marriage, as a hint for future changes to romance
+ Added Dynamic Appearance, based on the initial test from 0.4.5
+ Added new story element for Dynamic Appearance
+ Added an idle reading behavior in certain settings; implementation method borrowed from Ashe - Crystal Heart by Martimus, with permission
+ Revised Lielle's follower framework, giving her complete standalone follower behavior. This makes her INCOMPATIBLE with follower framework mods like NFF/EFF/BFF/AFT
+ Made further refinements and adjustments to Lielle's follower behavior. She will now automatically sandbox in certain locations while an active follower, as well as ready spells when the player draws weapons
+ Implemented a custom home feature for post-marriage. Lielle can now be moved into any valid player home with the correct keywords, delivered through the new quest "A Place To Grow"
+ Implemented a new feature to enhance Lielle's expressiveness; Emotion Manager, interfacing directly with Mfg Fix NG to provide unique expressions in dialogue. System falls back to default dialogue expressions when Mfg Fix NG is not installed, with subtle enhancements
+ Added a custom eye part using the base game (or replacement) mesh with unique texture variants as part of Emotion Manager
+ Added dynamic blush effect as part of Emotion Manager; depends on RaceMenu -- gracefully disables if not present
+ Added animated tears effect as part of Emotion Manager; depends on RaceMenu -- gracefully falls back to shader effect method if not present.
+ Added internal central logging and verbose notifications on start up and for specific events. These notifications can be toggled off in the MCM
+ If Papyrus logging is enabled, Lielle will now write to a custom log file for debugging and testing purposes
+ 
+A Team Roseheart Production:
+
+Technical and Creative Team:
+
+Andrew Hanson "ReDrew89"	Author, Lead Developer
+"SanneARBY"			Lead Level Designer, Promotional Artist
+"Scorcher"			QA Lead, Play Tester
+"pndragon65"			Play Tester
+"Gorguts5"			Play Tester
+
+Voice Talent:
+
+Jody Sharp "JoJoRawr"		Lielle, Young Lielle, Child Lielle
+Milica Radovanović "MilicaVO"	Sees-With-Three-Eyes
+"YoungOne" 			Malek and Marek (Child)
+"Vanwood"			Markus
+Ethan Smith			Bandit 1
+D.D. Rumin			Bandit 2
+
+Special Mention:
+
+The Unofficial Elder Scrolls Pages Wiki
+/r/SkyrimMods
+
+Character Assets:
+
+KS Hairdos by Kalilies
+Frecklemania 2 by tetrodoxin
+CBBE 3BBB Advanced
+Caliente's Beautiful Bodies Enhancer
+Unified UNP
+Baka Haeun UNP
+Fair Skin Complexion SE
+Women of Skyrim SE
+Skin Feature Overlays SE
+UNP Dragon Tattoos and more by AncientKane (Legendary Edition, personal port)
+Robert HGEC Underwear CBBE 3BA
+UNP Nevernude Bikini BHUNP Bodyslide Conversion
+CBBE 3BA Vanilla Outfits Redone
+BHUNP Skyrim Vanilla Outfits
+Female Hands Redone
+Osare Culort Outfit by anano feat. Zynxx
+Ashara Imperial Outfit (Port removed)
+
+Tools and Software:
+
+Mod Organizer 2
+Creation Kit Platform Extended
+xEdit
+BSA Browser
+Paint.NET
+Notepad++
+Audacity
+BodySlide and Outfit Studio
+blender
+Claude.ai (Scripting and Implementation)
+
+Scripting and Implementation Techniques:
+
+Lucien by JosephRussell
+Deadwood 2.0 by PyroToaster
+Ashe - Crystal Heart by Martimus
+Spellbreaker Spell Reflection and Ward Visuals Restored
+
+Patreon (All-Inclusive):
+
+"jwisser"
+"Drac"
+"piranha45"
