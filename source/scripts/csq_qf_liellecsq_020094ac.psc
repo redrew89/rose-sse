@@ -2,6 +2,11 @@
 ;NEXT FRAGMENT INDEX 15
 Scriptname CSQ_QF_LielleCSQ_020094AC Extends Quest Hidden
 
+;BEGIN ALIAS PROPERTY EstormoAlias
+;ALIAS PROPERTY TYPE ReferenceAlias
+ReferenceAlias Property Alias_EstormoAlias Auto
+;END ALIAS PROPERTY
+
 ;BEGIN ALIAS PROPERTY LielleAlias
 ;ALIAS PROPERTY TYPE ReferenceAlias
 ReferenceAlias Property Alias_LielleAlias Auto
@@ -12,24 +17,10 @@ ReferenceAlias Property Alias_LielleAlias Auto
 ReferenceAlias Property Alias_OrthornAlias Auto
 ;END ALIAS PROPERTY
 
-;BEGIN ALIAS PROPERTY EstormoAlias
-;ALIAS PROPERTY TYPE ReferenceAlias
-ReferenceAlias Property Alias_EstormoAlias Auto
-;END ALIAS PROPERTY
-
 ;BEGIN ALIAS PROPERTY AncanoAlias
 ;ALIAS PROPERTY TYPE ReferenceAlias
 ReferenceAlias Property Alias_AncanoAlias Auto
 ;END ALIAS PROPERTY
-
-;BEGIN FRAGMENT Fragment_7
-Function Fragment_7()
-;BEGIN CODE
-SetObjectiveCompleted(10)
-SetObjectiveCompleted(20)
-;END CODE
-EndFunction
-;END FRAGMENT
 
 ;BEGIN FRAGMENT Fragment_11
 Function Fragment_11()
@@ -50,10 +41,24 @@ LielleCSQMisc01.Start()
 EndFunction
 ;END FRAGMENT
 
+;BEGIN FRAGMENT Fragment_7
+Function Fragment_7()
+;BEGIN CODE
+SetObjectiveCompleted(10)
+SetObjectiveCompleted(20)
+;END CODE
+EndFunction
+;END FRAGMENT
+
 ;BEGIN FRAGMENT Fragment_13
 Function Fragment_13()
 ;BEGIN CODE
 XO.XOPlus(2.5)
+
+
+if CadmusBookAlias && LielleSleepMarker
+  CadmusBookAlias.GetReference().Moveto(LielleSleepMarker.GetReference())
+endif
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -69,3 +74,7 @@ Quest Property LielleCSQMisc01  Auto
 LielleXOScript Property XO  Auto  
 
 LielleEmotionManager Property Emotions  Auto  
+
+ReferenceAlias Property CadmusBookAlias  Auto  
+
+ReferenceAlias Property LielleSleepMarker Auto 

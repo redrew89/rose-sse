@@ -13,7 +13,7 @@ Import MfgConsoleFuncExt
 ; Properties
 ReferenceAlias Property LielleAlias Auto  ; Set in CK
 String Property sCurrentEmotion = "Neutral" Auto
-Float Property EyeResetTimer = 10.0 Auto
+Float Property EyeResetTimer = 10.0 Auto ; Unused - eye reset now rides on the emotion cleanup timer
 
 ; Internal detection properties
 ;Bool Property bConditionalExpressionsPresent = false Auto
@@ -38,7 +38,6 @@ MagicEffect Property LielleEmotionBlushFX Auto
 ; Internal variables
 Actor Property Lielle auto
 
-Bool bEyeUpdateRegistered = false
 String[] sBasicEmotions 
 String[] sExtraEmotions
 
@@ -50,7 +49,37 @@ Function ResetEmotionManager()
 EndFunction
 
 Event OnInit()
-   
+
+	BuildEmotionLists()
+
+    ;Lielle = LielleAlias.GetActorReference()
+    If !Lielle
+        Core.Msg(msgFlag + "Failed to get Lielle's reference from alias!", false) ; TODO - This could probably be removed, because we declare Lielle's Actor as a property, now.
+        Return
+    EndIf
+
+	; Use SKSE to check if CEE is active
+	;/if !(Game.GetModByName("Conditional Expressions.esp") == 255)
+		Core.Msg(msgFlag + "CEE found. Adding emotions.")
+		bConditionalExpressionsPresent = true
+	EndIf/;
+
+	If !(SKSE.GetPluginVersion("mfgfix") == -1)
+		bMfgFixPresent = true
+		Core.Msg(msgFlag + "Found Mfg Fix NG. Enhancing emotions.")
+	Else
+		bMfgFixPresent = false
+		Core.msg(msgFlag + "Mfg Fix NG not found. Check installation. Falling back to default expressions.")
+	endif
+
+
+	; Initialize neutral state
+    ResetEmotionState()
+EndEvent
+
+int iEmotionListVersion = 0 ; Bumped when the emotion lists change, so existing saves rebuild them
+
+Function BuildEmotionLists()
 	; Initialize our string arrays for emotion types
 	sBasicEmotions = new String[8]
     sBasicEmotions[0] = "Happy"
@@ -58,52 +87,47 @@ Event OnInit()
     sBasicEmotions[2] = "Anger"
     sBasicEmotions[3] = "Fear"
     sBasicEmotions[4] = "Puzzled"
-    sBasicEmotions[3] = "Disgust"
+    sBasicEmotions[5] = "Disgust"
     sBasicEmotions[6] = "Surprised"
     sBasicEmotions[7] = "Neutral"
     
-	sExtraEmotions = new String[10]
+	sExtraEmotions = new String[11]
     sExtraEmotions[0] = "Vulnerable"
     sExtraEmotions[1] = "Anguish"
     sExtraEmotions[2] = "Love"
     sExtraEmotions[3] = "Overjoyed"
     sExtraEmotions[4] = "Flirty"
-    sExtraEmotions[3] = "Seductive"
+    sExtraEmotions[5] = "Seductive"
     sExtraEmotions[6] = "Bitter"
     sExtraEmotions[7] = "Embarrassed"
     sExtraEmotions[8] = "Flustered"
 	sExtraEmotions[9] = "Wary"
-	
-	
-    ;Lielle = LielleAlias.GetActorReference()
-    If !Lielle
-        Core.Msg(msgFlag + "Failed to get Lielle's reference from alias!", false) ; TODO - This could probably be removed, because we declare Lielle's Actor as a property, now.
-        Return
-    EndIf
-	
-	; Use SKSE to check if CEE is active
-	;/if !(Game.GetModByName("Conditional Expressions.esp") == 255)
-		Core.Msg(msgFlag + "CEE found. Adding emotions.")
-		bConditionalExpressionsPresent = true
-	EndIf/;
-	
-	If !(SKSE.GetPluginVersion("mfgfix") == -1)
-		bMfgFixPresent = true
-		Core.Msg(msgFlag + "Found Mfg Fix NG. Enhancing emotions.")
-	Else
-		Core.msg(msgFlag + "Mfg Fix NG not found. Check installation. Falling back to default expressions.")
-	endif
-	
-	
-	; Initialize neutral state
-    ResetEmotionState()
-EndEvent
+	sExtraEmotions[10] = "Sarcastic"
+
+	iEmotionListVersion = 1
+EndFunction
 
 Event OnUpdateGameTime()
 	
+	if bEmotionLocked
+		return ; Held by LockEmotion until UnlockEmotion
+	endif
 	ResetEmotionState()
 	
 EndEvent
+
+bool bEmotionLocked = false
+
+; Holds an emotion through the automatic cleanup, for scenes that span several lines
+Function LockEmotion(String emotion, int intensity = 100)
+	bEmotionLocked = true
+	HandleEmotions(emotion, intensity)
+EndFunction
+
+Function UnlockEmotion()
+	bEmotionLocked = false
+	ResetEmotionState()
+EndFunction
 
 ;/ --- REFACTORED TO CALL MfgConsoleFuncExt DIRECTLY - PRESERVED FOR MAINTENANCE.
 Function OLDHandleEmotions(String emotion, int intensity = 100)
@@ -323,10 +347,14 @@ EndFunction
 Function HandleEmotions(String emotion, int intensity = 100)
     
 	Core.Msg(msgFlag + "Lielle should be expressing: " + emotion, false)
-	
+
+	if iEmotionListVersion < 1
+		BuildEmotionLists() ; Saves from before the list fix have Fear/Overjoyed overwritten
+	endif
+
 	sCurrentEmotion = emotion
     HandleEyeTextures(emotion)
-	
+
      ; Handle tears for intense emotions
 	if emotion == "Sad" && intensity >= 90
 		SetTears()
@@ -365,7 +393,7 @@ Function HandleEmotions(String emotion, int intensity = 100)
         elseif emotion == "Sad"
             ; Deep sadness
             MfgConsoleFuncExt.SetModifier(Lielle, 8, intensity/2, 0.75) ; LookDown
-            MfgConsoleFuncExt.SetExpression(Lielle, 3, intensity*1.3 as int, 0.75) ; Sad expression
+            MfgConsoleFuncExt.SetExpression(Lielle, 3, ClampIntensity((intensity*1.3) as int), 0.75) ; Sad expression
             Utility.Wait(0.5)
             ; Slight frown with mouth slightly open for pained expression
             MfgConsoleFuncExt.SetPhoneme(Lielle, 6, intensity/4, 0.75) ; Eh for slight open mouth
@@ -387,7 +415,7 @@ Function HandleEmotions(String emotion, int intensity = 100)
             MfgConsoleFuncExt.SetExpression(Lielle, 4, intensity, 0.75) ; Surprise expression
             Utility.Wait(0.5)
             ; Fear
-            MfgConsoleFuncExt.SetExpression(Lielle, 1, intensity*1.3 as int, 0.75) ; Fear expression
+            MfgConsoleFuncExt.SetExpression(Lielle, 1, ClampIntensity((intensity*1.3) as int), 0.75) ; Fear expression
             ; Wide eyes
             MfgConsoleFuncExt.SetModifier(Lielle, 6, intensity, 0.75) ; BrowUpL
             MfgConsoleFuncExt.SetModifier(Lielle, 7, intensity, 0.75) ; BrowUpR
@@ -430,15 +458,29 @@ Function HandleEmotions(String emotion, int intensity = 100)
         endif          
     elseif extraIndex >= 0 && bMfgFixPresent
         HandleSpecialEmotions(emotion, intensity)
-    endif    
-    
+    endif
+
     CheckAndClearBlinks()
-    RegisterForSingleUpdateGameTime(0.1) ; schedule clean up after 6 minutes in game.
+    ; The quest has one game-time timer, so this single registration covers expression, effect and eye cleanup
+    if extraIndex >= 0
+        RegisterForSingleUpdateGameTime(2.0) ; Schedule cleanup after 2 game hours
+    else
+        RegisterForSingleUpdateGameTime(0.1) ; schedule clean up after 6 minutes in game.
+    endif
+EndFunction
+
+int Function ClampIntensity(int aiIntensity)
+    if aiIntensity > 100
+        return 100
+    elseif aiIntensity < 0
+        return 0
+    endif
+    return aiIntensity
 EndFunction
 
 Function HandleSpecialEmotions(String emotion, int intensity = 100)
     ; Calculate scaled intensity for more subtle expressions
-    int baseIntensity = math.floor(intensity*1.10)
+    int baseIntensity = ClampIntensity(math.floor(intensity*1.10))
     float smoothSpeed = 0.75
     
     If emotion == "Vulnerable"
@@ -593,7 +635,6 @@ Function HandleSpecialEmotions(String emotion, int intensity = 100)
     EndIf
     
     CheckAndClearBlinks()
-    RegisterForSingleUpdateGameTime(2.0) ; Schedule cleanup after 2 game hours
 EndFunction
 
 Function HandleEyeTextures(String emotion)
@@ -601,35 +642,29 @@ Function HandleEyeTextures(String emotion)
         Return
     EndIf
     
+    ; No timer here - the cleanup registered by HandleEmotions resets the eyes via ResetEmotionState
     If emotion == "Flirty" || emotion == "Seductive" || emotion == "Love" || emotion == "Overjoyed" || emotion == "Anger" || emotion == "Surprised" || emotion == "Flustered"
         Lielle.SetEyeTexture(DilatedEyes)
-        If !bEyeUpdateRegistered
-            RegisterForSingleUpdateGameTime(EyeResetTimer)
-            bEyeUpdateRegistered = true
-        EndIf
     ElseIf emotion == "Fear" || emotion == "Anguish" || emotion == "Disgust" || emotion == "Bitter"
         Lielle.SetEyeTexture(ConstrictedEyes)
-        If !bEyeUpdateRegistered
-            RegisterForSingleUpdateGameTime(EyeResetTimer)
-            bEyeUpdateRegistered = true
-        EndIf
     Else
         Lielle.SetEyeTexture(DefaultEyes)
-        bEyeUpdateRegistered = false
-        UnregisterForUpdateGameTime()
     EndIf
 EndFunction
 
 
-Function SetTears()
-	; We don't need an argument because the magic effect stops when cast again while active
-	LielleEmotionTears.Cast(Lielle)
+; Casting the spell again while active ends the effect, so only cast when the state needs to change
+Function SetTears(bool abOn = true)
+	if Lielle && Lielle.HasMagicEffect(LielleEmotionTearsFX) != abOn
+		LielleEmotionTears.Cast(Lielle)
+	endif
 EndFunction
 
 
-Function SetBlush()
-	; We don't need an argument because the magic effect stops when cast again while active
-	LielleEmotionBlush.Cast(Lielle)
+Function SetBlush(bool abOn = true)
+	if Lielle && Lielle.HasMagicEffect(LielleEmotionBlushFX) != abOn
+		LielleEmotionBlush.Cast(Lielle)
+	endif
 EndFunction
 
 
@@ -651,7 +686,7 @@ EndFunction
 
 
 Function CheckAndClearBlinks()
-    if !Lielle
+    if !Lielle || !bMfgFixPresent
         Return
     endif
     
@@ -663,24 +698,24 @@ Function CheckAndClearBlinks()
         MfgConsoleFuncExt.SetModifier(Lielle, 1, 0, 0.5) ; Clear right blink
         Core.Msg(msgFlag + "Cleared stuck blink state", false)
     endif
-    
-    ; Use ResetModifiers from MfgConsoleFuncExt
-    MfgConsoleFuncExt.ResetModifiers(Lielle, 0.5)
+    ; No ResetModifiers here - it would wipe the brow/look modifiers HandleEmotions just set
 EndFunction
 
 Function ResetEmotionState()
     Core.Msg(msgFlag + "Clearing the current emotion.", false)
+    if !Lielle
+        Return
+    endif
     Utility.wait(1)
     sCurrentEmotion = "Neutral"
-    if Lielle.HasMagicEffect(LielleEmotionTearsFX)
-        SetTears()
-    endif
-    if Lielle.HasMagicEffect(LielleEmotionBlushFX)
-        SetBlush()
-    endif
+    SetTears(false)
+    SetBlush(false)
     HandleEyeTextures("Neutral")
     CheckAndClearBlinks()
     
     ; Reset all expressions and phonemes using MfgConsoleFuncExt
-    MfgConsoleFuncExt.ResetMfg(Lielle, 0.75)
+    if bMfgFixPresent
+        MfgConsoleFuncExt.ResetModifiers(Lielle, 0.5)
+        MfgConsoleFuncExt.ResetMfg(Lielle, 0.75)
+    endif
 EndFunction

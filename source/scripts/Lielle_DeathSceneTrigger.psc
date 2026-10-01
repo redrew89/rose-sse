@@ -8,7 +8,7 @@ Event OnDeath(Actor akKiller)
 
 	if akKiller == Game.GetPlayer()
 		LielleMiscScene.start()
-	elseif akKiller != Game.GetPlayer() && self == Game.GetPlayer()
+	elseif akKiller != Game.GetPlayer() && GetActorReference() == Game.GetPlayer()
 		LiellePlayerDeathScene.start()
 	endif
 	

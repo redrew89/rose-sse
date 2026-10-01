@@ -22,7 +22,7 @@ bool Property TraceActive5 Auto Conditional
 Float Property HealThreshold = 0.4 Auto ; Heal at 40% health
 
 Event OnInit()
-    RegisterForUpdate(3.0) ; Check health status every second
+    RegisterForUpdate(3.3) 
     LastHealTarget = None
 EndEvent
 

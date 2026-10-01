@@ -47,6 +47,8 @@ Event OnDeath(Actor akKiller)
 
      Self.GetActorRef().RemoveFromFaction(CurrentHireling)
 
+     (GetOwningQuest() as LielleFollowerScript).LielleIsFollowing.SetValue(0.0) ; Stops distance monitoring from moving her body
+
      Self.Clear()
 
 EndEvent

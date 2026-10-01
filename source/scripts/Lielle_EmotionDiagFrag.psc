@@ -27,3 +27,5 @@ LielleEmotionManager Property Emotions  Auto
 String Property sEmotion  Auto  
 
 Int Property iValue  Auto  
+
+Int Property iIntensity  Auto ; Filled by 0.4.7-era dialogue infos

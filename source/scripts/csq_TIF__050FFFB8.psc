@@ -6,7 +6,7 @@ Scriptname csq_TIF__050FFFB8 Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
-(GetOwningQuest() as LiellePlayerCheckScript).ExaminePlayer(false)
+(GetOwningQuest() as LiellePlayerCheckScript).ExaminePlayer(false,false)
 debug.notification("Lielle is checking you out.")
 ;END CODE
 EndFunction

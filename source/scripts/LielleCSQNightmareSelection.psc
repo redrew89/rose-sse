@@ -47,7 +47,7 @@ Function RewardDisplay()
 endFunction
 
 Event OnUpdateGameTime()
-	if Self.getStage() == 50
+	if Self.getStage() != 60
 		Self.setStage(60)
 	endif
 EndEvent

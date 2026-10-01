@@ -54,6 +54,7 @@ Function SetFollower(ObjectReference FollowerRef)
   EndIf
   FollowerActor.SetPlayerTeammate()
   FollowerAlias.ForceRefTo(FollowerActor)
+  LielleActor = FollowerActor ; The alias may have been empty at OnInit
   LielleIsFollowing.SetValue(1.0)
   isWaiting = false
   UpdateCombatStyle(true)
@@ -78,7 +79,7 @@ Function FollowerFollow()
 EndFunction
 
 Function DismissFollower(Int iMessage = 0, Int iSayLine = 1, Actor akActor = None)
-  If FollowerAlias && FollowerAlias.GetActorReference().IsDead() == False
+  If FollowerAlias && FollowerAlias.GetActorReference() && FollowerAlias.GetActorReference().IsDead() == False
     If iMessage == 0
       FollowerDismissMessage.Show()
     ElseIf iMessage == 1
@@ -128,10 +129,10 @@ Function MonitorDistance()
     
     if distance > 4000.0 && !isDistanceWarned
       isDistanceWarned = true
-    elseif distance > 5000.0
-      float offsetX = PlayerRef.X + 100.0 * Math.cos(PlayerRef.GetAngleZ())
-      float offsetY = PlayerRef.Y + 100.0 * Math.sin(PlayerRef.GetAngleZ())
-      LielleActor.MoveTo(PlayerRef, offsetX - PlayerRef.X, offsetY - PlayerRef.Y)
+    elseif distance > 5000.0 && !LielleActor.GetCurrentScene() && !LielleActor.IsDead()
+      ; Angle Z is clockwise from north, so the player's forward vector is (sin, cos)
+      float angle = PlayerRef.GetAngleZ()
+      LielleActor.MoveTo(PlayerRef, 100.0 * Math.sin(angle), 100.0 * Math.cos(angle))
       isDistanceWarned = false
     elseif distance < 3000.0
       isDistanceWarned = false

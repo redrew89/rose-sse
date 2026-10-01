@@ -2,7 +2,7 @@ Scriptname LielleTattooActivate extends ReferenceAlias
 
 Message Property LielleCSQTattooMSG Auto
 
-Armor Property TattooGlow Auto
+Quest Property LielleDynamicAppearance Auto
 
 MiscObject Property GlowMixture Auto
 
@@ -15,7 +15,8 @@ Event OnActivate(ObjectReference akActionRef)
 		if iButton == 0
 			;fade to black, equip tattoo glow object to Lielle's Reference
 			DoFadeOut(0.3)
-			GetActorReference().EquipItem(TattooGlow, true)
+			LielleDynamicAppearanceManager DynApp = LielleDynamicAppearance as LielleDynamicAppearanceManager
+			DynApp.SetTattoo(1,0,true)
 			Game.GetPlayer().RemoveItem(GlowMixture, 1)
 			Utility.Wait(3)
 			DoFadeIn(0.3)

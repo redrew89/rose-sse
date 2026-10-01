@@ -1,27 +1,17 @@
-Scriptname LiellePlayerWeaponMonitor extends ReferenceAlias
+Scriptname LiellePlayerWeaponMonitor extends ActiveMagicEffect
 
-Actor Property PlayerRef Auto
+
 ReferenceAlias Property LielleAlias Auto
 
-Event OnInit()
-    RegisterForControl("Ready Weapon")
+Event OnEffectStart(actor aktarget, actor akcaster)
+
+	(LielleAlias.GetActorReference()).EvaluatePackage()
+
 EndEvent
 
-Event OnControlDown(string control)
-    If control == "Ready Weapon"
-        Actor Lielle = LielleAlias.GetActorReference()
-        If Lielle
-			Utility.Wait(0.5)
-            Lielle.EvaluatePackage()
-        EndIf
-    EndIf
-EndEvent
 
-Event OnPlayerLoadGame()
-    UnregisterForControl("Ready Weapon")
-    RegisterForControl("Ready Weapon")
-EndEvent
+Event OnEffectFinish(actor aktarget, actor akcaster)
 
-Event OnUnload()
-    UnregisterForControl("Ready Weapon")
+	(LielleAlias.GetActorReference()).EvaluatePackage()
+
 EndEvent

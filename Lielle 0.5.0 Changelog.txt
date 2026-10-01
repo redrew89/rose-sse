@@ -23,41 +23,43 @@ Lielle 0.5.0 Changelog
  Textual revisions on a number of dialogues, to bring the writing style within Bethesda's established style ("Alright" vs "All right")
  Rebalanced Affection changes via dialogue; the amount of affection gained or lost through dialogue has been reduced to less than whole integer amounts, in most cases. This is to prepare for future changes to the Affection framework and other planned content
  Added patchless detection and integration for outfits from West Wind Misfit Mage and Dwemer Researcher Armor; install one or both outfit mods. This feature lets Lielle dynamically change outfits based on weather, location, and specific story events. Finding the Misfit Mage chest is the first event to uncover
- Note that users of the vanilla base body can use the original UNP versions of both outfits, even though the original West Wind Misfit Mage is for Legendary Edition. You can convert it yourself easily with the Creation Kit and Cathedral Asset Optimizer or similar tools.
- Users of the CBBE/3BA base body can use the respective conversions for both outfits. Be sure to use BodySlide to build outfits based on Lielle's provided preset
+ Users of the UUNP base body can use the original UNP versions of both outfits, even though the original West Wind Misfit Mage is for Legendary Edition. You can convert it yourself easily with the Creation Kit and Cathedral Asset Optimizer or similar tools.
+ Users of the CBBE/3BA base body can use the respective conversions for both outfits. Be sure to use BodySlide to build outfits based on Lielle's provided preset, or use OBody NG to apply her preset automatically for any outfit you give her
  Also added patchless support for KS Hairdos - HDT SMP, where the optional wigs plugin is installed. Lielle will now automatically equip her physics-enabled wig at game start
  Also added patchless support for Cloaks and Capes, now Lielle will equip various capes, depending on her chosen outfit, when the weather turns poor
  Note that the outfit feature offers limited player-choice in what outfit Lielle might wear, as well as an option to disable outfit switching and cloak equipping via dialogue. I plan to eventually expand it to player-provided options, for different situations, gated by Affection
  Added patchless support for KS Jewelry SSE, which enhances Lielle's wedding outfit, if installed, as well as KS Hairdos wigs component
  Added expanded outfit detection via keywords distributed by KID. Some outfits are too revealing for Lielle to accept wearing (unless Affection is high enough). Requires Keyword Item Distributor
  Restructured and made slight edits to Lielle's marriage process. She will now require a two-week betrothal before marriage, as a hint for future changes to romance
- Added new story element that gives Lielle enhanced tattoos; now she's complete
+ Added Dynamic Appearance, based on the initial test from 0.4.5
+ Added new story element for Dynamic Appearance
  Added an idle reading behavior in certain settings; implementation method borrowed from Ashe - Crystal Heart by Martimus, with permission
  Revised Lielle's follower framework, giving her complete standalone follower behavior. This makes her INCOMPATIBLE with follower framework mods like NFF/EFF/BFF/AFT
  Made further refinements and adjustments to Lielle's follower behavior. She will now automatically sandbox in certain locations while an active follower, as well as ready spells when the player draws weapons
- Implemented a custom home feature for post-marriage. Lielle can now be moved into any valid player home with the correct keywords, delivered by the new quest "A Place To Grow"
+ Implemented a custom home feature for post-marriage. Lielle can now be moved into any valid player home with the correct keywords, delivered through the new quest "A Place To Grow"
  Implemented a new feature to enhance Lielle's expressiveness; Emotion Manager. By interfacing directly with Mfg Fix NG to provide unique expressions in dialogue. System falls back to default dialogue expressions when Mfg Fix NG is not installed, with subtle enhancements
  Minor story and dialogue additions and revisions, including a universal catch for player's who might use Legacy of the Dragonborn; now they won't lose out on an artifact
  Carried over revisions made in 0.4.x to fix scene order issues during the Gauldur Amulet quest commentary
- Added a custom eye part with unique texture variants as part of Emotion Manager
+ Added a custom eye part using the base game (or replacement) mesh with unique texture variants as part of Emotion Manager
  Added dynamic blush effect as part of Emotion Manager; depends on RaceMenu -- gracefully disables if not present
  Added animated tears effect as part of Emotion Manager; depends on RaceMenu -- gracefully falls back to shader effect method if not present
  Added internal central logging and verbose notifications on start up and for specific events. These notifications can be toggled off in the MCM
  If Papyrus logging is enabled, Lielle will now write to a custom log file for debugging and testing purposes
  
- A Team Rose Production:
+A Team Rose Production:
 
 Technical and Creative Team:
 
-Drew H. "ReDrew89"		Lead Writer, Lead Developer, Lead Character Designer
+Andrew Hanson "ReDrew89"	Author, Lead Developer
 "Dashogi"			Supporting Writer
-"SanneARBY"			Lead Level Designer
+"SanneARBY"			Lead Level Designer, Promotional Artist
 "Scorcher"			QA Lead, Play Tester
 "pndragon65"			Play Tester
+"Gorguts5"			Play Tester
 
 Voice Talent:
 
-Jody Sharp "JoJo Rawr"		Lielle, Young Lielle, Child Lielle
+Jody Sharp "JoJoRawr"		Lielle, Young Lielle, Child Lielle
 Milica Radovanović "MilicaVO"	Sees-With-Three-Eyes
 "YoungOne" 			Malek and Marek (Child)
 "Vanwood"			Markus
@@ -66,20 +68,26 @@ D.D. Rumin			Bandit 2
 
 Special Mention:
 
-Custom Follower Academy Discord
 The Unofficial Elder Scrolls Pages Wiki
 /r/SkyrimMods
 
 Character Assets:
 
 KS Hairdos by Kalilies
-Fair Skin Complexion by HHaleyy
-Women of Skyrim SE by Shiva182
-UNP Dragon Tattoos and more by AncientKane
 Frecklemania 2 by tetrodoxin
-Natural Eyes
-Caliente's Beautiful Bodies Edition
-CBBE 3BA by Acro748
+CBBE 3BBB Advanced
+Caliente's Beautiful Bodies Enhancer
+Unified UNP
+Baka Haeun UNP
+Fair Skin Complexion SE
+Women of Skyrim SE
+Skin Feature Overlays SE
+UNP Dragon Tattoos and more by AncientKane (Legendary Edition, personal port)
+Robert HGEC Underwear CBBE 3BA
+UNP Nevernude Bikini BHUNP Bodyslide Conversion
+CBBE 3BA Vanilla Outfits Redone
+BHUNP Skyrim Vanilla Outfits
+Female Hands Redone
 Osare Culort Outfit by anano feat. Zynxx
 Ashara Imperial Outfit (Port removed)
 

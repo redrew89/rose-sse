@@ -5,7 +5,7 @@ Event OnLoad()
 EndEvent
 
 Event OnActivate(ObjectReference akActionRef)
-	If (akActionRef == Game.GetPlayer())
+	If (akActionRef == Game.GetPlayer()) && (!LielleARQRoseNeloth.IsRunning() && !LielleARQRoseNeloth.IsCompleted())
 		LielleARQRoseNeloth.Start()
 		;debug.Notification("Lielle is intrigued by what you are doing.")
 	EndIf

@@ -24,25 +24,29 @@ endFunction
 
 Function RankAdd(float RankValue)
 
-	float nRank = (LielleStudyRank + RankValue) 
-	int	cRank = Math.Floor(LielleStudyRank)  		
-	
-	if nRank > 50
+	if RankValue <= 0.0 || LielleStudyRank >= 50.0
 		return
 	endif
-	
-	if nRank > cRank
-		RankUp()
-		
-		if (nRank as int % 10) == 0
-			int pRank = nRank as int / 10 
-			PerkAdd(pRank)
-		endif
-		
+
+	float nRank = LielleStudyRank + RankValue
+	if nRank > 50.0
+		nRank = 50.0
 	endif
-			
-	LielleStudyRank=(LielleStudyRank + RankValue) 
-	
+
+	int cRank = Math.Floor(LielleStudyRank)
+	int newRank = Math.Floor(nRank)
+	LielleStudyRank = nRank
+
+	; One rank-up per whole rank crossed, and a perk for each multiple of 10 crossed
+	int i = cRank + 1
+	while i <= newRank
+		RankUp()
+		if (i % 10) == 0
+			PerkAdd(i / 10)
+		endif
+		i += 1
+	endWhile
+
 EndFunction
 
 

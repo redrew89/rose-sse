@@ -1,8 +1,8 @@
 Scriptname LielleCoreScript extends Quest  Conditional
 
-string Property sLielleVersion = "0.5.0 DEV" Auto 
+string Property sLielleVersion = "0.5.0 DEV" AutoReadOnly ; ReadOnly, so saves from older versions report the current version
 
-string Property LastVer auto 
+string Property LastVer auto
 
 bool Property Lielle3EyesDiag = false auto Conditional ;Three-Eyes dialogue flag
 
@@ -24,16 +24,22 @@ bool Property LielleCollegeHistory = false Auto Conditional
 
 bool Property LielleCollegeInsomnia = false Auto Conditional
 
+bool Property LielleWarpaintDiag = false Auto Conditional
+
+bool Property LielleCadmusBookRead = False Auto Conditional
+
+int Property LiellePerfumeDiag = 0 Auto Conditional
+
 string Function LielleVersion()
 	return sLielleVersion
-EndFunction 
+EndFunction
 
 
 Event OnInit()
 
 	Debug.OpenUserLog("Lielle")
 	msg("LielleCore Initialized. Logging started for version " + sLielleVersion)
-	
+
 EndEvent
 
 Function Msg(string aMsg, bool bVerboseOverride = true)
@@ -42,6 +48,7 @@ Function Msg(string aMsg, bool bVerboseOverride = true)
 		debug.notification(aMsg)
 	Endif
 	debug.Trace(aMsg)
+	debug.OpenUserLog("Lielle") ; User logs close when the game exits - no-op when already open
 	debug.TraceUser("Lielle", aMsg)
 
 EndFunction
