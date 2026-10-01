@@ -118,6 +118,20 @@ EndEvent
 
 bool bEmotionLocked = false
 
+; Read-only state, for status readouts (test suite, debug dialogue)
+bool Property bEmotionLockedState
+	bool Function Get()
+		return bEmotionLocked
+	EndFunction
+EndProperty
+
+string sEyeState = "Default" ; Papyrus can set eye textures but not read them back, so track the last one set
+string Property sEyeTextureState
+	string Function Get()
+		return sEyeState
+	EndFunction
+EndProperty
+
 ; Holds an emotion through the automatic cleanup, for scenes that span several lines
 Function LockEmotion(String emotion, int intensity = 100)
 	bEmotionLocked = true
@@ -366,12 +380,10 @@ Function HandleEmotions(String emotion, int intensity = 100)
  
 	; Handle effects for specific emotions
 	if (emotion == "Anguish" && intensity >= 70) || (emotion == "Vulnerable" && intensity >= 90) || (emotion == "Overjoyed" && intensity >= 70)
-		Utility.Wait(1)
-		SetTears()
+		SetTears() ; no lead-in wait - conversation cameras cut away before a delayed effect shows
 	endif   
 	if (emotion == "Flirty") || (emotion == "Seductive") || (emotion == "Embarrassed") || (emotion == "Flustered")
-		Utility.wait(1)
-		SetBlush()
+		SetBlush() ; no lead-in wait - the blush script's own fade-in gives the gradual flush
 	EndIf
         
     int basicIndex = sBasicEmotions.Find(emotion)
@@ -645,25 +657,40 @@ Function HandleEyeTextures(String emotion)
     ; No timer here - the cleanup registered by HandleEmotions resets the eyes via ResetEmotionState
     If emotion == "Flirty" || emotion == "Seductive" || emotion == "Love" || emotion == "Overjoyed" || emotion == "Anger" || emotion == "Surprised" || emotion == "Flustered"
         Lielle.SetEyeTexture(DilatedEyes)
+        sEyeState = "Dilated"
     ElseIf emotion == "Fear" || emotion == "Anguish" || emotion == "Disgust" || emotion == "Bitter"
         Lielle.SetEyeTexture(ConstrictedEyes)
+        sEyeState = "Constricted"
     Else
         Lielle.SetEyeTexture(DefaultEyes)
+        sEyeState = "Default"
     EndIf
 EndFunction
 
 
-; Casting the spell again while active ends the effect, so only cast when the state needs to change
+; Recasting an active effect restarts it rather than ending it, so turning off dispels the spell
 Function SetTears(bool abOn = true)
-	if Lielle && Lielle.HasMagicEffect(LielleEmotionTearsFX) != abOn
+	if !Lielle
+		return
+	endif
+	bool bActive = Lielle.HasMagicEffect(LielleEmotionTearsFX)
+	if abOn && !bActive
 		LielleEmotionTears.Cast(Lielle)
+	elseif !abOn && bActive
+		Lielle.DispelSpell(LielleEmotionTears)
 	endif
 EndFunction
 
 
 Function SetBlush(bool abOn = true)
-	if Lielle && Lielle.HasMagicEffect(LielleEmotionBlushFX) != abOn
+	if !Lielle
+		return
+	endif
+	bool bActive = Lielle.HasMagicEffect(LielleEmotionBlushFX)
+	if abOn && !bActive
 		LielleEmotionBlush.Cast(Lielle)
+	elseif !abOn && bActive
+		Lielle.DispelSpell(LielleEmotionBlush)
 	endif
 EndFunction
 

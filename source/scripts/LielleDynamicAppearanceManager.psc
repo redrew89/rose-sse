@@ -26,9 +26,20 @@ int Property DEFAULT_TATTOO = 0 Auto
 string Property msgFlag = "LielleCore - Dynamic Appearance: " AutoReadOnly
 
 Function SetWarpaint(int menuIndex = -1, int customColor = 0xFFFFFF, bool bGlow = false)
-	if menuIndex != -1 || iMenuSelectWarpaint != menuIndex
-		iMenuSelectWarpaint = menuIndex
+	if menuIndex < 0 ; No arguments (game load, monitors) - re-apply the current settings, keeping colour and glow
+		menuIndex = iMenuSelectWarpaint
+		customColor = CUSTOM_PAINT
+		bGlow = bWarpaintGlow
+		if menuIndex < 0
+			menuIndex = 0 ; Saves from before this fix stored -1 on every load
+		endif
 	endif
+	; The paint is baked into her FaceGen tint, so there is no Clean Face any more - index 0 (old saves,
+	; story scenes) just means the default colour if glow gets turned on
+	if menuIndex == 0 && bGlow
+		menuIndex = 1
+	endif
+	iMenuSelectWarpaint = menuIndex
 	CUSTOM_PAINT = customColor
 	bWarpaintGlow = bGlow
 	
@@ -49,26 +60,41 @@ Function SetWarpaint(int menuIndex = -1, int customColor = 0xFFFFFF, bool bGlow 
 	
 	; Set glow
 	if bGlow && menuIndex != 0
-		Warpaint.EmissiveMultiple = 1.0
+		Warpaint.EmissiveMultiple = 0.5
 	else
 		Warpaint.EmissiveMultiple = 0.0
 	endif
-	
-	Warpaint.warpaintMCMSetting = menuIndex
+
+	; The overlay only carries the glow: it fades in while glow is on, and with glow off it fades out and
+	; releases its slot (overlay setting 0) - the colour choice is kept for the next time glow is turned on
+	if bGlow
+		Warpaint.warpaintMCMSetting = menuIndex
+	else
+		Warpaint.warpaintMCMSetting = 0
+	endif
 	Warpaint.StartWarpaint()
 EndFunction
 
 Function SetTattoo(int menuIndex = -1, int customColor = 0xFFFFFF, bool bGlow = false)
 	
-	if menuIndex != -1 || iMenuSelectTattoo != menuIndex
-		iMenuSelectTattoo = menuIndex
-	endif
-	CUSTOM_TATT = customColor
-	
-	if bTattooGlow || bGlow
-		if bTattooGlow != bGlow
-			bTattooGlow = bGlow
+	if menuIndex < 0 ; No arguments (game load) - re-apply the current settings, keeping colour and glow
+		menuIndex = iMenuSelectTattoo
+		customColor = CUSTOM_TATT
+		bGlow = bTattooGlow
+		if menuIndex < 0
+			menuIndex = 0 ; Saves from before this fix stored -1 on every load - fall back to no glow
 		endif
+	endif
+	; Glow with the accent at Disabled would show nothing - use the default colour, as the warpaint does
+	if menuIndex == 0 && bGlow
+		menuIndex = 1
+	endif
+	iMenuSelectTattoo = menuIndex
+	CUSTOM_TATT = customColor
+
+	; Glow follows the request - previously turning it off left EmissiveMultiple at 1.0 for one call
+	bTattooGlow = bGlow
+	if bGlow
 		Tattoo.EmissiveMultiple = 1.0
 	else
 		Tattoo.EmissiveMultiple = 0.0
