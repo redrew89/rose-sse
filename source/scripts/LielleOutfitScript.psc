@@ -25,7 +25,7 @@ FormList Property LielleMisfitOutfitFLST Auto ; Formlist for containing Misfit M
 																	Armor Property LielleBodyCustom Auto
 																			bool Property bWeddingItemsAdded = false Auto
 																				bool Property bWigsFound = false Auto
-																				int Property iLielleBodyState = 0 Auto
+																				int Property iLielleBodyState = 1 Auto ; 0 - Always underwear, 1 - Story-based (default), 2 - Always nude
 																					LielleCoreScript Property Core Auto
 																						String msgFlag = "LielleCore - Outfits: "
 																						String sNudeBody = "lielle\\nude\\femalebody_1.nif"
@@ -66,8 +66,7 @@ State InitStart
 				endif
 				if LielleModularOutfitFLST.GetSize() > 0
 					LielleOutfitAlternate.SetValueInt(1)
-					ModularJacket = Game.GetFormFromFile(0x000F41, "[Imp] Modular Mage.esp") as Armor ; Adept jacket
-					(LielleAlias.GetActorReference()).AddSpell(ModularJacketSpell)
+					ModularJacket = Game.GetFormFromFile(0x000F41, "[Imp] Modular Mage.esp") as Armor ; Adept jacket - its ability is granted by SetOutfitAlternate
 				endif
 				if LielleOutfitCloakFLST.GetSize() > 0
 					LielleOutfitCloak.SetValueInt(1)
@@ -142,8 +141,7 @@ State InitStart
 			LielleModularOutfitFLST.AddForm(Game.GetFormFromFile(0x000913, "[Imp] Modular Mage.esp")) ; Adept stockings 3
 			LielleModularOutfitFLST.AddForm(Game.GetFormFromFile(0x000D79, "[Imp] Modular Mage.esp")) ; Adept high heels
 			LielleModularOutfitFLST.AddForm(Game.GetFormFromFile(0x000EB0, "[Imp] Modular Mage.esp")) ; Adept skirt 3
-			ModularJacket = Game.GetFormFromFile(0x000F41, "[Imp] Modular Mage.esp") as Armor ; Adept jacket
-			(LielleAlias.GetActorReference()).AddSpell(ModularJacketSpell)
+			ModularJacket = Game.GetFormFromFile(0x000F41, "[Imp] Modular Mage.esp") as Armor ; Adept jacket - its ability is granted by SetOutfitAlternate
 			LielleOutfitAlternate.SetValueInt(1)
 		else
 			Core.Msg(msgFlag + "Modular Mage not found", false)
@@ -185,159 +183,274 @@ State InitStart
 	
 EndState
 
+; 0 - Always underwear, 1 - Story-based (underwear until a scene undresses her), 2 - Always nude
 Function SetBody(int iState)
-
 	iLielleBodyState = iState
-
-	if iState == 0 ; underwear always
-
-		ArmorAddon LielleBodyAP = LielleBodyCustom.GetNthArmorAddon(0)
-		LielleBodyAP.SetModelPath(sUnderwearBody,false,true)
-
-	elseif iState == 1 ; story-based nudity
-
-		ArmorAddon LielleBodyAP = LielleBodyCustom.GetNthArmorAddon(0)
-		if LielleBodyAP.GetModelPath(false,true) != sNudeBody
-			sUnderwearBody = LielleBodyAP.GetModelPath(false,true)
-		endif
-
-	elseif iState == 2 ; always nude
-
-		ArmorAddon LielleBodyAP = LielleBodyCustom.GetNthArmorAddon(0)
-		if LielleBodyAP.GetModelPath(false,true) != sNudeBody
-			sUnderwearBody = LielleBodyAP.GetModelPath(false,true)
-		endif
-		LielleBodyAP.SetModelPath(sNudeBody,false,true)
-
+	if iState != 1
+		isNude = false ; Scene nudity only applies in story mode
 	endif
-
+	ApplyBody()
 EndFunction
 
+bool isNude = false ; Story-based mode: true while a scene has her undressed
 
-bool isNude = false
+; Story-based scenes: toggle between her undergarments and nude. Does nothing outside story mode
 Function SwapBody()
+	SetSceneNude(!isNude)
+EndFunction
 
+Function SetSceneNude(bool abNude)
+	if iLielleBodyState != 1
+		return
+	endif
+	isNude = abNude
+	ApplyBody()
+EndFunction
+
+; Puts the right body model on her for the current setting. Model path changes on an armour addon aren't saved - the game
+; rebuilds them from the plugin on every load - so Lielle_PlayerLoadScript calls this after each load
+Function ApplyBody()
 	ArmorAddon LielleBodyAP = LielleBodyCustom.GetNthArmorAddon(0)
-
-	if iLielleBodyState == 1 && !isNude
-
-		LielleBodyAP.SetModelPath(sNudeBody,false,true)
-
-	elseif isNude
-
-		LielleBodyAP.SetModelPath(sUnderwearBody,false,true)
-
+	string sCurrent = LielleBodyAP.GetModelPath(false,true)
+	if sCurrent != sNudeBody
+		sUnderwearBody = sCurrent ; Remember whichever underwear body this install uses
 	endif
 
+	string sWanted = sUnderwearBody
+	if iLielleBodyState == 2 || (iLielleBodyState == 1 && isNude)
+		sWanted = sNudeBody
+	endif
+
+	if sCurrent != sWanted
+		LielleBodyAP.SetModelPath(sWanted,false,true)
+		Actor Lielle = LielleAlias.GetActorReference()
+		if Lielle && Lielle.Is3DLoaded()
+			Lielle.QueueNiNodeUpdate() ; Rebuild her 3D so the new body shows
+		endif
+	endif
 EndFunction
 
 
+; Outfit state 0 is shared by the College robes and the Modular Mage alternate, so these track which one she has on
+bool bAltActive = false ; True while the Modular Mage alternate is the outfit she's wearing
+bool bRobesSelected = false ; True once the player asks for the robes by name - default switches keep the robes until ResetOutfits
+
+; True when akItem belongs to the outfit Lielle is set to wear, so cleanup and the equip watcher leave it alone.
+; Outfits can share pieces (her College boots are in both the robes and Misfit), which is why this is checked per item.
+bool Function IsInCurrentOutfit(Form akItem)
+	if !akItem
+		return false
+	endif
+	int current = LielleOutfitCurrent.GetValueInt()
+	if current == 0
+		if bAltActive
+			return LielleModularOutfitFLST.HasForm(akItem) || (ModularJacket && akItem == ModularJacket)
+		endif
+		return OutfitHasPart(LielleCollegeRobes, akItem)
+	elseif current == 1
+		return LielleMisfitOutfitFLST.HasForm(akItem)
+	elseif current == 2
+		return LielleResearcherOutfitFLST.HasForm(akItem)
+	elseif current == 10
+		return LielleOutfitWeddingFLST.HasForm(akItem)
+	endif
+	return false
+EndFunction
+
+bool Function OutfitHasPart(Outfit akOutfit, Form akItem)
+	int i = 0
+	int total = akOutfit.GetNumParts()
+	while i < total
+		if akOutfit.GetNthPart(i) == akItem
+			return true
+		endif
+		i += 1
+	endWhile
+	return false
+EndFunction
+
+; Removes every copy - she can hold both an EquipItem copy and an outfit copy of the same piece
+Function RemoveAllOf(Actor akLielle, Form akItem)
+	if akItem && !IsInCurrentOutfit(akItem) && !IsGift(akItem)
+		int count = akLielle.GetItemCount(akItem)
+		if count > 0
+			akLielle.RemoveItem(akItem, count)
+			Core.Msg(msgFlag + "Removed " + count + "x " + akItem.GetName() + " (" + akItem + ")", false)
+		endif
+	endif
+EndFunction
+
+Function RemoveListItems(Actor akLielle, FormList akList)
+	int i = 0
+	int total = akList.GetSize()
+	while i < total
+		RemoveAllOf(akLielle, akList.GetAt(i))
+		i += 1
+	endWhile
+EndFunction
+
+; Gifts - armour the player gave her that passed her modesty check, tracked in LielleOutfitDetectScript's LielleOutfitPlayerFLST.
+; They stay locked on across outfits, except in a slot the current outfit has a piece for. A gift put on after the current
+; outfit keeps its slot until the player changes her outfit - re-applying the same outfit (load, cell change, MCM reset) leaves it.
+int iGiftSlotMask = 0 ; Slots a gift took over after the current outfit went on
+int iAppliedOutfit = -1 ; OutfitKey() of the outfit last applied - a different key is a real outfit change
+
+FormList Function GiftList()
+	return (GetAlias(0) as LielleOutfitDetectScript).LielleOutfitPlayerFLST
+EndFunction
+
+bool Function IsGift(Form akItem)
+	FormList kGifts = GiftList()
+	return kGifts && kGifts.HasForm(akItem)
+EndFunction
+
+; Her own extras that other systems put on - the leftover sweep leaves them alone
+bool Function IsExtra(Form akItem)
+	return akItem == Lielle_GogglesUp || akItem == IcarusWig || akItem == CambrianWig || akItem == ModularJacket || LielleOutfitCloakFLST.HasForm(akItem)
+EndFunction
+
+; Robes and the Modular Mage alternate share outfit state 0, so the alternate gets its own key
+int Function OutfitKey()
+	if LielleOutfitCurrent.GetValueInt() == 0 && bAltActive
+		return 99
+	endif
+	return LielleOutfitCurrent.GetValueInt()
+EndFunction
+
+; Call once the new outfit's state is set. A real change hands every slot back to the outfit
+Function BeginOutfit()
+	int iKey = OutfitKey()
+	if iKey != iAppliedOutfit
+		iGiftSlotMask = 0
+		iAppliedOutfit = iKey
+	endif
+EndFunction
+
+; A piece equipped with abPreventRemoval blocks a plain EquipItem into its slot, so the slot is cleared first
+Function EquipLocked(Actor akLielle, Armor akItem)
+	int iMask = akItem.GetSlotMask()
+	int i = 0
+	while i < 32
+		int iBit = Math.LeftShift(1, i)
+		if Math.LogicalAnd(iMask, iBit) != 0
+			Form kWorn = akLielle.GetWornForm(iBit)
+			if kWorn && kWorn != akItem
+				akLielle.UnequipItem(kWorn, false, true)
+			endif
+		endif
+		i += 1
+	endWhile
+	akLielle.EquipItem(akItem, true, true)
+EndFunction
+
+; Outfit pieces skip slots a gift took over since this outfit went on.
+; A piece shared with her default outfit (her College boots are also Misfit's) is deleted by the engine when SetOutfit swaps
+; outfits, and EquipItem doesn't reliably restore it - so she gets a fresh copy whenever she has none
+Function EquipOutfitPiece(Form akItem)
+	Armor kPiece = akItem as Armor
+	if kPiece && Math.LogicalAnd(kPiece.GetSlotMask(), iGiftSlotMask) == 0
+		Actor Lielle = LielleAlias.GetActorReference()
+		if Lielle.GetItemCount(kPiece) == 0
+			Lielle.AddItem(kPiece, 1, true)
+		endif
+		EquipLocked(Lielle, kPiece)
+	endif
+EndFunction
+
+; Called by LielleOutfitDetectScript when she accepts a gift - it takes its slots until her outfit changes
+Function EquipGift(Armor akGift)
+	if akGift
+		EquipLocked(LielleAlias.GetActorReference(), akGift)
+		iGiftSlotMask = Math.LogicalOr(iGiftSlotMask, akGift.GetSlotMask())
+	endif
+EndFunction
+
+int Function ListSlotMask(FormList akList)
+	int iMask = 0
+	int i = 0
+	while i < akList.GetSize()
+		Armor kPiece = akList.GetAt(i) as Armor
+		if kPiece
+			iMask = Math.LogicalOr(iMask, kPiece.GetSlotMask())
+		endif
+		i += 1
+	endWhile
+	return iMask
+EndFunction
+
+; Every slot the current outfit has a piece for
+int Function CurrentOutfitSlotMask()
+	int current = LielleOutfitCurrent.GetValueInt()
+	if current == 0 && bAltActive
+		return ListSlotMask(LielleModularOutfitFLST)
+	elseif current == 0
+		int iMask = 0
+		int i = 0
+		while i < LielleCollegeRobes.GetNumParts()
+			Armor kPiece = LielleCollegeRobes.GetNthPart(i) as Armor
+			if kPiece
+				iMask = Math.LogicalOr(iMask, kPiece.GetSlotMask())
+			endif
+			i += 1
+		endWhile
+		return iMask
+	elseif current == 1
+		return ListSlotMask(LielleMisfitOutfitFLST)
+	elseif current == 2
+		return ListSlotMask(LielleResearcherOutfitFLST)
+	elseif current == 10
+		return ListSlotMask(LielleOutfitWeddingFLST)
+	endif
+	return 0
+EndFunction
+
+; Strips pieces from every outfit other than the current one, then sets the engine outfit to match
 Function ClearOutfit()
 
 	Actor Lielle = LielleAlias.GetActorReference()
-	;Lielle.UnequipAll()
-	if LielleOutfitCurrent.GetValueInt() == 0 
-		int i = 0 
-		while i < (LielleMisfitOutfitFLST.GetSize())
-			if LielleMisfitOutfitFLST.GetAt(i) != LielleClothesMGBoots
-				Lielle.RemoveItem(LielleMisfitOutfitFLST.GetAt(i))
-			endif
-				i +=1
-		endWhile
-		i = 0
-		while i < (LielleResearcherOutfitFLST.GetSize())
-			Lielle.RemoveItem(LielleResearcherOutfitFLST.GetAt(i))
-			i +=1
-		endWhile
-		i = 0
-		while i < (LielleOutfitWeddingFLST.GetSize())
-			Lielle.RemoveItem(LielleOutfitWeddingFLST.GetAt(i))
-			i +=1
-		endWhile
-		Lielle.SetOutfit(LielleCollegeRobes)
-	elseif LielleOutfitCurrent.GetValueInt() == 1
-		int i = 0 
-		
+	int current = LielleOutfitCurrent.GetValueInt()
+
+	if current == 20 ; Player-provided outfit - her items stay as they are
+		Lielle.SetOutfit(LielleEmptyOutfit)
+	else
+		int i = 0
 		int total = LielleCollegeRobes.GetNumParts()
 		while i < total
-			if LielleCollegeRobes.GetNthPart(i) != LielleClothesMGBoots
-				Lielle.RemoveItem(LielleCollegeRobes.GetNthPart(i))
-			endif
-			i +=1
+			RemoveAllOf(Lielle, LielleCollegeRobes.GetNthPart(i))
+			i += 1
 		endWhile
-		
-		i = 0
-		while i < (LielleResearcherOutfitFLST.GetSize())
-			Lielle.RemoveItem(LielleResearcherOutfitFLST.GetAt(i))
-			i +=1
-		endWhile
-		i = 0
-		while i < (LielleModularOutfitFLST.GetSize())
-			Lielle.RemoveItem(LielleModularOutfitFLST.GetAt(i))
-			i +=1
-		endWhile
-		i = 0
-		while i < (LielleOutfitWeddingFLST.GetSize())
-			Lielle.RemoveItem(LielleOutfitWeddingFLST.GetAt(i))
-			i +=1
-		endWhile
-	elseif LielleOutfitCurrent.GetValueInt() == 2
-		int i = 0 
-		
-		while i < (LielleCollegeRobes.GetNumParts())
-			Lielle.RemoveItem(LielleCollegeRobes.GetNthPart(i))
-			i +=1
-		endWhile
-		
-		i = 0
-		while i < (LielleMisfitOutfitFLST.GetSize())
-			Lielle.RemoveItem(LielleMisfitOutfitFLST.GetAt(i))
-			i +=1
-		endWhile
-		i = 0
-		while i < (LielleOutfitWeddingFLST.GetSize())
-			Lielle.RemoveItem(LielleOutfitWeddingFLST.GetAt(i))
-			i +=1
-		endWhile
-	elseif LielleOutfitCurrent.GetValueInt() == 10
-		int i = 0 
-		
-		int total = LielleCollegeRobes.GetNumParts()
-		while i < total
-			Lielle.RemoveItem(LielleCollegeRobes.GetNthPart(i))
-			i +=1
-		endWhile
-		
-		i = 0
-		while i < (LielleMisfitOutfitFLST.GetSize())
-			Lielle.RemoveItem(LielleMisfitOutfitFLST.GetAt(i))
-			i +=1
-		endWhile
-		i = 0
-		while i < (LielleResearcherOutfitFLST.GetSize())
-			Lielle.RemoveItem(LielleResearcherOutfitFLST.GetAt(i))
-			i +=1
-		endWhile
-		i = 0
-		while i < (LielleModularOutfitFLST.GetSize())
-			Lielle.RemoveItem(LielleModularOutfitFLST.GetAt(i))
-			i +=1
-		endWhile
-	elseif LielleOutfitCurrent.GetValueInt() == 20
-		LielleAlias.GetActorReference().SetOutfit(LielleEmptyOutfit)
+		RemoveListItems(Lielle, LielleMisfitOutfitFLST)
+		RemoveListItems(Lielle, LielleResearcherOutfitFLST)
+		RemoveListItems(Lielle, LielleModularOutfitFLST)
+		RemoveListItems(Lielle, LielleOutfitWeddingFLST)
+
+		if current == 0 && !bAltActive
+			Lielle.SetOutfit(LielleCollegeRobes)
+		else
+			Lielle.SetOutfit(LielleEmptyOutfit)
+		endif
 	endif
-	
+
+	; The jacket ability only checks that Modular Mage is installed, so it has to go whenever the alternate isn't worn
+	if !(current == 0 && bAltActive)
+		if ModularJacketSpell
+			Lielle.RemoveSpell(ModularJacketSpell)
+		endif
+		RemoveAllOf(Lielle, ModularJacket)
+	endif
+
 	RemoveCloak()
-	
+
 EndFunction
 
 Function SetOutfitMisfit()
-	LielleOutfitCurrent.SetValueInt(1)	
-	
+	LielleOutfitCurrent.SetValueInt(1)
+	BeginOutfit()
+
 	LielleAlias.GetActorReference().SetOutfit(LielleEmptyOutfit)
 	int i = 0
 	while i < (LielleMisfitOutfitFLST.GetSize())
-		LielleAlias.GetActorReference().EquipItem(LielleMisfitOutfitFLST.GetAt(i) as Armor, true,true)
+		EquipOutfitPiece(LielleMisfitOutfitFLST.GetAt(i))
 		i +=1
 	endWhile
 	ClearOutfit()
@@ -345,46 +458,55 @@ Function SetOutfitMisfit()
 EndFunction
 
 Function SetOutfitResearcher()
-	LielleOutfitCurrent.SetValueInt(2)	
-		
+	LielleOutfitCurrent.SetValueInt(2)
+	BeginOutfit()
+
 	LielleAlias.GetActorReference().SetOutfit(LielleEmptyOutfit)
 	int i = 0
 	while i < (LielleResearcherOutfitFLST.GetSize())
-		LielleAlias.GetActorReference().EquipItem(LielleResearcherOutfitFLST.GetAt(i) as Armor, true,true)
+		EquipOutfitPiece(LielleResearcherOutfitFLST.GetAt(i))
 		i +=1
 	endWhile
 	ClearOutfit()
 	SetExtra()
 	if GetStage() < 40
-		SetStage(40) 
+		SetStage(40)
 	endif
-	
+
 EndFunction
 
 Function SetOutfitWedding()
 	LielleOutfitCurrent.SetValueInt(10)
-	
+	BeginOutfit()
+
 	LielleAlias.GetActorReference().SetOutfit(LielleEmptyOutfit)
 	int i = 0
 	while i < (LielleOutfitWeddingFLST.GetSize())
-		LielleAlias.GetActorReference().EquipItem(LielleOutfitWeddingFLST.GetAt(i) as Armor, true,true)
+		EquipOutfitPiece(LielleOutfitWeddingFLST.GetAt(i))
 		i +=1
 	endWhile
 	ClearOutfit()
+	LogOutfit()
 EndFunction
 
+; abAltOutfit = false means the player asked for the College robes - that choice sticks until ResetOutfits
 Function SetOutfitDefault(bool abAltOutfit = true)
-	if LielleOutfitAlternate.GetValueInt() == 1 && abAltOutfit
+	if !abAltOutfit
+		bRobesSelected = true
+	endif
+	if LielleOutfitAlternate.GetValueInt() == 1 && !bRobesSelected
 		SetOutfitAlternate()
 		return
 	endif
 
+	bAltActive = false
 	LielleOutfitCurrent.SetValueInt(0)
+	BeginOutfit()
 
 	int itemCount = LielleCollegeRobes.GetNumParts()
     int i = 0
     while i < itemCount
-        LielleAlias.GetActorReference().EquipItem((LielleCollegeRobes.GetNthPart(i) as Armor), true,true) ; Auto-equip each item in outfit
+        EquipOutfitPiece(LielleCollegeRobes.GetNthPart(i))
         i += 1
     endWhile
 	ClearOutfit()
@@ -393,21 +515,45 @@ Function SetOutfitDefault(bool abAltOutfit = true)
 EndFunction
 
 Function SetOutfitAlternate()
+	if LielleOutfitAlternate.GetValueInt() != 1 || LielleModularOutfitFLST.GetSize() == 0
+		Core.Msg(msgFlag + "Alternate outfit unavailable - using the College robes.", false)
+		SetOutfitDefault(false)
+		return
+	endif
+	bRobesSelected = false ; Asking for the alternate by name clears a robes choice
+	bAltActive = true
 	LielleOutfitCurrent.SetValueInt(0)
+	BeginOutfit()
 
+	Actor Lielle = LielleAlias.GetActorReference()
+	Lielle.SetOutfit(LielleEmptyOutfit)
 	int i = 0
 	while i < (LielleModularOutfitFLST.GetSize())
-		LielleAlias.GetActorReference().EquipItem(LielleModularOutfitFLST.GetAt(i) as Armor, true,true)
+		EquipOutfitPiece(LielleModularOutfitFLST.GetAt(i))
 		i +=1
 	endWhile
+	if ModularJacketSpell
+		Lielle.AddSpell(ModularJacketSpell, false) ; Jacket goes on outdoors - only granted while the alternate is worn
+	endif
 	ClearOutfit()
 
 	SetExtra()
 EndFunction
 
+; Rain, snow and night are cloak weather - none of them change her outfit. LielleClimateScript calls SetCloakOption when this flips
+bool Function IsCloakWeather()
+	Weather kCurrent = Weather.GetCurrentWeather()
+	if kCurrent && (kCurrent.GetClassification() == 2 || kCurrent.GetClassification() == 3)
+		return true
+	endif
+	float fDays = Utility.GetCurrentGameTime()
+	float fHour = (fDays - Math.Floor(fDays)) * 24.0
+	return fHour < 6.0 || fHour >= 20.0
+EndFunction
+
 Function SetCloakOption()
 
-    if (Weather.GetCurrentWeather().GetClassification() == 2 || Weather.GetCurrentWeather().GetClassification() == 3) && LielleOutfitCloak.GetValueInt() == 1 && LielleOutfitCloakToggle.GetValueInt() == 1
+    if IsCloakWeather() && LielleOutfitCloak.GetValueInt() == 1 && LielleOutfitCloakToggle.GetValueInt() == 1
 		if LielleOutfitCurrent.GetValueInt() == 0 && !LielleAlias.GetActorReference().IsEquipped(LielleOutfitCloakFLST.GetAt(0) as Armor)
 			; Default Outfit, brown cloak
 			LielleAlias.GetActorReference().EquipItem(LielleOutfitCloakFLST.GetAt(0) as Armor)
@@ -440,28 +586,51 @@ Function RemoveCloak()
 
 EndFunction
 
+; Runs after an outfit goes on: her extras, then gifts, then anything left over
 Function SetExtra()
-	
+
 	Actor Lielle = LielleAlias.GetActorReference()
-	if LielleARQWord.IsRunning() 
+	if LielleARQWord.IsRunning()
 		Lielle.EquipItem(Lielle_GogglesUp,true,true) ; Equip her goggles, if Word Wall research quest is active
 	endif
 	if IcarusWig != NONE
 		Lielle.EquipItem(IcarusWig,true,true) ; Equip her physics wig, if present
 	endif
-	
-	int i = 0	
-	int totalItems = Lielle.GetNumItems()
 
-	;Cycle inventory, check for each item that is type ARMOR - equip if not already - may tighten scope to only select jewelry
+	; Gifts lock on, except in a slot the outfit has a piece for - unless the gift took that slot after this outfit went on
+	int iOutfitMask = Math.LogicalAnd(CurrentOutfitSlotMask(), Math.LogicalNot(iGiftSlotMask))
+	FormList kGifts = GiftList()
+	int i = 0
+	if kGifts
+		while i < kGifts.GetSize()
+			Armor kGift = kGifts.GetAt(i) as Armor
+			if kGift && Lielle.GetItemCount(kGift) > 0
+				if Math.LogicalAnd(kGift.GetSlotMask(), iOutfitMask) != 0
+					if Lielle.IsEquipped(kGift)
+						Lielle.UnequipItem(kGift, false, true) ; The outfit piece takes this slot - the gift stays in her inventory
+					endif
+				elseif !Lielle.IsEquipped(kGift)
+					EquipLocked(Lielle, kGift)
+				endif
+			endif
+			i += 1
+		endWhile
+	endif
+
+	; Leftovers - armour in no outfit list, not a gift and not an extra (e.g. pieces from an older version of a list)
+	; come off but stay in her inventory
+	i = 0
+	int totalItems = Lielle.GetNumItems()
 	while i < totalItems
-		Armor currentItem = Lielle.GetNthForm(i) as Armor
-		if currentItem && !Lielle.IsEquipped(currentItem)
-			Lielle.EquipItem(currentItem, true, true)
+		Armor kItem = Lielle.GetNthForm(i) as Armor
+		if kItem && Lielle.IsEquipped(kItem) && !IsInCurrentOutfit(kItem) && !IsGift(kItem) && !IsExtra(kItem)
+			Lielle.UnequipItem(kItem, false, true)
+			Core.Msg(msgFlag + "Unequipped leftover " + kItem.GetName() + " (" + kItem + ")", false)
 		endif
 		i += 1
-	endWhile	
-		
+	endWhile
+
+	LogOutfit()
 EndFunction
 
 Function ResetOutfits()
@@ -472,6 +641,8 @@ Function ResetOutfits()
 	LielleOutfitCloakFLST.Revert()
 	LielleModularOutfitFLST.Revert()
 	bWeddingItemsAdded = false
+	bRobesSelected = false ; Back to the alternate default, if Modular Mage is installed
+	bAltActive = false
 	GotoState("") ; Already in InitStart - leave first so OnBeginState runs again and refills the lists
 	GotoState("InitStart")
 	LielleAlias.GetActorReference().SetOutfit(LielleCollegeRobes)
@@ -529,4 +700,19 @@ Function DebugOutput()
 		Core.Msg(msgFlag + "KS Wigs variable not filled. Check if installed.", false)
 	endif
 	
+EndFunction
+
+; Writes the outfit state and every filled armour slot to Lielle.log - the trace for outfit-mixing reports
+Function LogOutfit()
+	Actor Lielle = LielleAlias.GetActorReference()
+	string sWorn = ""
+	int i = 0
+	while i < 32
+		Form kWorn = Lielle.GetWornForm(Math.LeftShift(1, i))
+		if kWorn && StringUtil.Find(sWorn, "(" + kWorn + ")") < 0
+			sWorn += kWorn.GetName() + " (" + kWorn + "), "
+		endif
+		i += 1
+	endWhile
+	Core.Msg(msgFlag + "Outfit " + LielleOutfitCurrent.GetValueInt() + " (alternate " + bAltActive + ", robes chosen " + bRobesSelected + ") wearing: " + sWorn, false)
 EndFunction

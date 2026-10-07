@@ -45,6 +45,19 @@ Lielle 0.5.0 Changelog
  Added animated tears effect as part of Emotion Manager; depends on RaceMenu -- gracefully falls back to shader effect method if not present
  Added internal central logging and verbose notifications on start up and for specific events. These notifications can be toggled off in the MCM
  If Papyrus logging is enabled, Lielle will now write to a custom log file for debugging and testing purposes
+ Added Affection tiers to the Affection framework. Affection now also resolves to a tier (Low, Moderate, High, or Devoted while courting or married), recalculated on every Affection change and on game load, as groundwork for simpler Affection-based dialogue
+ Fixed an Affection gain in Lielle's research outfit dialogue that was never applied
+ Fixed Dynamic Appearance not starting on new games
+ Fixed Lielle's alternate default outfit (Modular Mage) layering over her College robes instead of replacing them
+ Fixed outfit switching: asking Lielle to change into her College robes now does so even with Modular Mage installed, and the choice persists until outfits are reset; switching outfits now removes every piece of the previous one (including duplicate copies and the Modular Mage jacket), and pieces shared between outfits, such as her College boots in the Misfit outfit, are no longer stripped
+ Gifts that pass Lielle's modesty check now stay on across outfit changes, giving way only where a new outfit has its own piece for that slot; armour left over from outside her outfits is taken off when she changes
+ Reworked climate awareness for outfit changes: whether Lielle finds a place cold or mild now comes from where she stands on the world map, using a climate map built from the game's own weather regions (northern coasts, snowfields and mountains are cold), instead of hand-picked location lists that left most of Skyrim unclassified. Falling snow is always cold, interiors keep the last outdoor reading, and rain or nightfall bring out her cloak without an outfit change
+ Fixed the MCM splash logo not appearing; the image is now sized to a multiple of 4, as its texture compression requires
+ The MCM's nudity setting is now a single drop-down: Story-based (the default for new games), Always Underwear or Always Nude. The setting, and any scene nudity, now survives loading a save, and switching back to Story-based restores her undergarments
+ Removed unneeded edits to vanilla records for better compatibility, including the vanilla marriage breakup dialogue, a stray script that replaced its vanilla behavior for every spouse, and spouse dialogue edits that overrode HearthfireMultiKid
+ Removed an edit to the Greybeards' call story manager node that could cause excessive script stacks
+ Added idle cues for the main quest and College questline commentaries: when Lielle has something to say about recent events, she'll now hint at it ("looks like she wants to say something"), until you ask her or the moment passes
+ Fixed Lielle's closing dialogue for the College of Winterhold questline never appearing if the player had picked up The Dreamstride first; the College commentary no longer waits on Lielle's Secret, which already waits on the College
  
 A Team Rose Production:
 

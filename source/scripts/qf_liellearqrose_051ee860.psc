@@ -7,6 +7,14 @@ Scriptname QF_LielleARQRose_051EE860 Extends Quest Hidden
 ReferenceAlias Property Alias_LielleAlias Auto
 ;END ALIAS PROPERTY
 
+;BEGIN FRAGMENT Fragment_11
+Function Fragment_11()
+;BEGIN CODE
+Self.SetObjectiveDisplayed(10)
+;END CODE
+EndFunction
+;END FRAGMENT
+
 ;BEGIN FRAGMENT Fragment_9
 Function Fragment_9()
 ;BEGIN AUTOCAST TYPE LielleARQTimerScript
@@ -27,19 +35,11 @@ Quest __temp = self as Quest
 LielleARQStaffBenchEnabler kmyQuest = __temp as LielleARQStaffBenchEnabler
 ;END AUTOCAST
 ;BEGIN CODE
-If LielleARQStaffCheck.GetValueInt() == 1
+If Core.LielleARQStaffCheck == 1
            kmyQuest.DoTheThing()
 EndIf
 SetObjectiveCompleted(10)
 SetObjectiveDisplayed(15)
-;END CODE
-EndFunction
-;END FRAGMENT
-
-;BEGIN FRAGMENT Fragment_11
-Function Fragment_11()
-;BEGIN CODE
-Self.SetObjectiveDisplayed(10)
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -49,3 +49,5 @@ EndFunction
 Actor Property Lielle  Auto  
 
 GlobalVariable Property LielleARQStaffCheck  Auto  
+
+LielleCoreScript Property Core  Auto  

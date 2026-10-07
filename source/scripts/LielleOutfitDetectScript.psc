@@ -33,11 +33,14 @@ Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
 	endif
 
 	int currentOutfit = OutfitManager.LielleOutfitCurrent.GetValueInt()
+	if akBaseObject as Armor
+		OutfitManager.Core.Msg(msgFlag + "Equipped " + akBaseObject.GetName() + " (" + akBaseObject + ") under outfit " + currentOutfit + ", in current outfit: " + OutfitManager.IsInCurrentOutfit(akBaseObject), false)
+	endif
 
-	; College robes going on while another outfit is selected - the engine re-applied her default outfit.
-	; Robes equipped while the default outfit is selected are expected, so this can't loop on SetOutfitDefault
+	; College robes going on when they aren't part of the current outfit - the engine re-applied her default outfit.
+	; Pieces the current outfit uses (the robes themselves, or the boots Misfit shares) are expected, so this can't loop
 	if IsCollegeRobePart(akBaseObject)
-		if currentOutfit != 0 && currentOutfit != 20
+		if currentOutfit != 20 && !OutfitManager.IsInCurrentOutfit(akBaseObject)
 			OutfitManager.Core.Msg(msgFlag + "Checking if Lielle is wearing the right outfit.", false)
 			CheckCurrentOutfit()
 		endif
@@ -129,7 +132,7 @@ Function ValidateItem(Form currentForm)
 			LielleOutfitPlayerFLST.AddForm(currentForm)
 			OutfitManager.Core.Msg(msgFlag + "added ignored-tier item to formlist: " + currentForm.GetName(), false)
 		endif
-		GetActorReference().EquipItem(currentForm as Armor,true,true)
+		OutfitManager.EquipGift(currentForm as Armor) ; Takes its slots until her outfit changes
 		return
 	elseif currentForm.HasKeyword(LielleOutfitSkimpy) && XO.LielleXOVar < 5
 		;refusal
@@ -169,7 +172,7 @@ Function ValidateItem(Form currentForm)
 			LielleOutfitPlayerFLST.AddForm(currentForm)
 			OutfitManager.Core.Msg(msgFlag + "added item to formlist: " + currentForm.GetName(), false)
 		endif
-		GetActorReference().EquipItem(currentForm as Armor,true,true) ; OnObjectEquipped switches to the custom outfit for body armor
+		OutfitManager.EquipGift(currentForm as Armor) ; Takes its slots until her outfit changes - OnObjectEquipped switches to the custom outfit for body armor
 	endif
 
 	bool bRevealingAccepted = (GetActorReference().WornHasKeyword(LielleOutfitSkimpy) || GetActorReference().WornHasKeyword(LielleOutfitRevealing) || GetActorReference().WornHasKeyword(LielleOutfitScandalous))

@@ -18,8 +18,12 @@ Event OnPlayerLoadGame()
 
 
 	Core.Msg("LielleCore: Reinitalizing after reload.")
+	if XO
+		XO.UpdateTier() ; Saves from before the tier existed have none until it is recalculated
+	endif
 	Outfits.ClearOutfit()
 	Outfits.GotoState("InitStart")
+	Outfits.ApplyBody() ; Body model changes reset on load - restores Always Nude or a scene's nudity
 
 	if !GetActorReference().HasLOS(Lielle)
 		OutfitDetect.CheckCurrentOutfit()

@@ -12,6 +12,7 @@ bool Property bIsMarried = false Auto Conditional  ; Marriage flag - keeps the r
 float Property fFavor = 1.0 Auto Conditional             ; Favorability - modulates Affection changes, FAVOR_MIN to FAVOR_MAX
 float Property fAffection = 0.0 Auto Conditional   ; Primary relationship score
 float Property LielleXOVar = 0.0 Auto Conditional  ; Legacy variable - kept in sync with fAffection for dialogue conditions
+int Property iAffectionTier = 0 Auto Conditional   ; Affection band for dialogue conditions - 0 Low, 1 Moderate, 2 High, 3 Devoted
 
 ; -- Constants --
 float Property MAX_NORMAL_AFFECTION = 10.0 AutoReadOnly    ; Cap for normal relationship
@@ -24,6 +25,11 @@ float Property FAVOR_MAX = 1.2 AutoReadOnly       ; Most favorable player - gain
 float Property SCALING_FLOOR = 0.5 AutoReadOnly       ; Gain multiplier at 0 Affection - early trust builds slowly
 float Property SCALING_FULL_AT = 6.0 AutoReadOnly     ; Affection at which gains reach full value
 float Property COURTING_LOSS_MULT = 1.5 AutoReadOnly  ; Loss multiplier while courting
+
+; Affection tier boundaries - a tier starts above its value
+float Property TIER_MODERATE = 3.0 AutoReadOnly   ; Above this is Moderate
+float Property TIER_HIGH = 7.0 AutoReadOnly       ; Above this is High
+float Property TIER_DEVOTED = 10.0 AutoReadOnly   ; Above this is Devoted - only reachable while courting or married
 
 ; Raw favor score range, from checkPlayerRace + checkPlayerSex + checkPlayerFaction
 float Property RAW_FAVOR_MIN = 0.7 AutoReadOnly   ; 0.2 race + 0.5 sex + 0.0 faction
@@ -96,6 +102,7 @@ Function Initialize()
     endif
 
     GetFavor()
+    UpdateTier()
     initialized = true
     Log("Initialized successfully.", false)
 EndFunction
@@ -238,7 +245,25 @@ Function SetAffection(float aValue)
 
     fAffection = aValue
     LielleXOVar = fAffection
+    UpdateTier()
     Log("Affection set to " + fAffection, false)
+EndFunction
+
+; Recalculates iAffectionTier from fAffection - called on every Affection change and on game load
+Function UpdateTier()
+    int newTier = 0
+    if fAffection > TIER_DEVOTED
+        newTier = 3
+    elseif fAffection > TIER_HIGH
+        newTier = 2
+    elseif fAffection > TIER_MODERATE
+        newTier = 1
+    endif
+
+    if newTier != iAffectionTier
+        iAffectionTier = newTier
+        Log("Affection tier now " + iAffectionTier, false)
+    endif
 EndFunction
 
 Function XOPlus(float aValue, bool bShowMsg = true)
@@ -270,6 +295,7 @@ Function XOPlus(float aValue, bool bShowMsg = true)
     endif
 
     LielleXOVar = fAffection
+    UpdateTier()
     Log("Affection increased by " + gain + " to " + fAffection)
 EndFunction
 
@@ -305,6 +331,7 @@ Function XOMinus(float aValue, bool bShowMsg = true)
     endif
 
     LielleXOVar = fAffection
+    UpdateTier()
     Log("Affection decreased by " + loss + " to " + fAffection)
 
     ; Checked after clamping, so a loss that bottoms out still ends the courtship
