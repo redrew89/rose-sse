@@ -62,6 +62,7 @@ int 	opt_TattooCustom
 int 	opt_PaintSmudge
 int		opt_NudeStory
 int 	opt_NudeAlways
+int		opt_MenuNudity
 int		opt_DynAppStoryMode
 
 int 	opt_MenuDebugOutfit
@@ -200,7 +201,7 @@ Event OnPageReset(string Page)
 
 	
 	if page == ""
-		LoadCustomContent("lielle//Logo.dds")
+		LoadCustomContent("lielle//Logo.dds", 38, 33) ; Centres a 676x380 logo in the 752x446 content area - keep its dimensions multiples of 4 (DXT5)
 	else
 		UnloadCustomContent()
 	endif
@@ -215,12 +216,6 @@ Event OnPageReset(string Page)
 		opt_Teleport 			= AddToggleOption("Teleport to Player:", false)
 		opt_CombatReset 		= AddToggleOption("Reset Combat State:", false)
 		opt_AIReset 			= AddToggleOption("Reset AI:" , false)
-		
-		if !bNudeBody 
-			flag_NudeAlways = OPTION_FLAG_HIDDEN
-		else	
-			flag_NudeAlways = OPTION_FLAG_NONE
-		endif
 		
 		AddEmptyOption()
 		opt_msgVerbose 			= AddToggleOption("Verbose Messages", bMsgVerbose)
@@ -392,8 +387,9 @@ Event OnPageReset(string Page)
 		AddHeaderOption("Dynamic Appearance", flag_DynamicAppearance)
 		AddTextOption("RaceMenu: ", CheckIntegration(none, none, bNiOverridePresent), flag_DynamicAppearance)
 		
-		opt_NudeStory			= AddToggleOption("Story-based Nudity", bNudeBody)
-		opt_NudeAlways			= AddToggleOption("Always Nude", bNudeAlways,flag_NudeAlways)
+		opt_NudeStory			= -1 ; Replaced by the Nudity menu - option IDs are saved, stale ones could match another option
+		opt_NudeAlways			= -1
+		opt_MenuNudity			= AddMenuOption("Nudity:", NudityOptions()[NudityMenuPos()])
 		; Dynamic Appearance setup
 		bool bDynamicAppearanceAvailable = bNiOverridePresent 
 
@@ -481,6 +477,10 @@ Event OnOptionMenuOpen(int option)
 			SetMenuDialogStartIndex(DynAppManager.iMenuSelectTattoo)
 			SetMenuDialogDefaultIndex(1)
 		endif
+	elseif option == opt_MenuNudity
+		SetMenuDialogOptions(NudityOptions())
+		SetMenuDialogStartIndex(NudityMenuPos())
+		SetMenuDialogDefaultIndex(0) ; Story-based
 	endif	
 endEvent
 
@@ -511,10 +511,41 @@ Event OnOptionMenuAccept(int option, int index)
 			SetMenuOptionValue(opt_MenuTattoo, tattooGlowColors[index])
 			DynAppManager.SetTattoo(index, DynAppManager.CUSTOM_TATT)
 		endif
+	elseif option == opt_MenuNudity && index <= 2
+		; Menu order differs from LielleOutfitScript's body states: 0 - Underwear, 1 - Story, 2 - Nude
+		int iBodyState = 2
+		if index == 0
+			iBodyState = 1
+		elseif index == 1
+			iBodyState = 0
+		endif
+		Outfits.SetBody(iBodyState)
+		bNudeBody = iBodyState != 0
+		bNudeAlways = iBodyState == 2
+		SetMenuOptionValue(opt_MenuNudity, NudityOptions()[index])
 	endif
 	
 	ForcePageReset()
 endEvent
+
+String[] Function NudityOptions()
+	String[] sOptions = new String[3]
+	sOptions[0] = "Story-based"
+	sOptions[1] = "Always Underwear"
+	sOptions[2] = "Always Nude"
+	return sOptions
+EndFunction
+
+; Menu position for LielleOutfitScript's body state (0 - Underwear, 1 - Story, 2 - Nude)
+int Function NudityMenuPos()
+	int iBodyState = Outfits.iLielleBodyState
+	if iBodyState == 1
+		return 0
+	elseif iBodyState == 2
+		return 2
+	endif
+	return 1
+EndFunction
 
 int Function WarpaintMenuPos()
 	if DynAppManager.iMenuSelectWarpaint < 1
@@ -576,10 +607,8 @@ Event OnOptionHighlight(int option)
 		SetInfoText("Attempts to disengage Lielle from combat. Might not work")
 	elseif option == opt_Teleport
 		SetInfoText("Moves Lielle to your location. May break quests.")	
-	elseif option == opt_NudeStory
-		SetInfoText("By default, Lielle has undergarments. Enable this setting to allow optional full nudity in certain scenes.")
-	elseif option == opt_NudeAlways
-		SetInfoText("By default, Lielle has undergarments. Enable this setting to override.")
+	elseif option == opt_MenuNudity
+		SetInfoText("Story-based (default): undergarments, with optional full nudity in certain scenes. Always Underwear: undergarments at all times. Always Nude: no undergarments.")
 	endif
 	
 endEvent
@@ -642,24 +671,6 @@ Event OnOptionSelect(int option)
 			Core.Msg(DynAppManager.msgFlag + "Dynamic Appearance reset to story defaults.",false)
 		endif
 		
-	elseif option == opt_NudeAlways
-		bNudeAlways = !bNudeAlways
-		SetToggleOptionValue(option, bNudeAlways, false)
-		if bNudeAlways
-			Outfits.SetBody(2)
-		else
-			Outfits.SetBody(1)
-		endif
-		
-	elseif option == opt_NudeStory
-		bNudeBody = !bNudeBody
-		SetToggleOptionValue(option, bNudeBody, false)
-		if bNudeBody
-			Outfits.SetBody(1)
-		else
-			Outfits.SetBody(0)
-		endif
-	
 	endif
 
 	ForcePageReset()

@@ -6,7 +6,7 @@ Scriptname csq_TIF__0520327A Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
-(GetOwningQuest() as LielleOutfitScript).SetOutfitDefault()
+(GetOwningQuest() as LielleOutfitScript).SetOutfitDefault(false)
 ;END CODE
 EndFunction
 ;END FRAGMENT
