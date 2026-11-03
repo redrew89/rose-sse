@@ -6,6 +6,7 @@ Scriptname ARQ_TIF__051518A0 Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
+Emotions.HandleEmotions("Sarcastic", 80)
 ;script
 (LielleXOQMain as LielleXOScript).XOMinus(1)
 ;END CODE
@@ -15,3 +16,5 @@ EndFunction
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
 Quest Property LielleXOQMain  Auto  
+
+LielleEmotionManager Property Emotions Auto

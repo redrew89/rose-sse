@@ -7,7 +7,7 @@ Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 GetOwningQuest().SetObjectiveCompleted(10)
-Game.GetPlayer().AddItem(DA09Dawnbreaker)
+;Game.GetPlayer().AddItem(DA09Dawnbreaker)
 ;END CODE
 EndFunction
 ;END FRAGMENT

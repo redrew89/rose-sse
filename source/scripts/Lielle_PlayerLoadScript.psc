@@ -11,11 +11,14 @@ Actor Property Lielle Auto
 Faction Property CurrentFollowerFaction Auto
 
 Event OnInit()
+	RegisterForMenu("ContainerMenu")
 	RegisterForSingleUpdate(10)
 endEvent
 
 Event OnPlayerLoadGame()
 
+	RegisterForMenu("ContainerMenu") ; Saves from before the trade freeze never ran OnInit's registration
+	Lielle.SetDontMove(false) ; Never stay frozen across a load
 
 	Core.Msg("LielleCore: Reinitalizing after reload.")
 	if XO
@@ -35,6 +38,17 @@ endEvent
 
 Event OnUpdate()
 	OutfitDetect.CheckCurrentOutfit()
+endEvent
+
+Event OnMenuOpen(string menuName)
+	; ContainerMenu also opens for chests - only freeze her when it's her inventory (unpaused menus let her wander off)
+	if Game.GetCurrentCrosshairRef() == Lielle
+		Lielle.SetDontMove(true)
+	endif
+endEvent
+
+Event OnMenuClose(string menuName)
+	Lielle.SetDontMove(false)
 endEvent
 
 

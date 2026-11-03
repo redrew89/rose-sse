@@ -6,6 +6,7 @@ Scriptname csq_gyhTIF__05FCE209 Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
+Emotions.HandleEmotions("Love", 90)
 (GetOwningQuest() as LielleCSQ_GYHScript).HugSet(0)
 (GetOwningQuest() as LielleCSQ_GYHScript).HugFollower(akSpeaker)
 ;END CODE
@@ -24,3 +25,5 @@ EndFunction
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
 LielleXOScript Property XO  Auto  
+
+LielleEmotionManager Property Emotions Auto

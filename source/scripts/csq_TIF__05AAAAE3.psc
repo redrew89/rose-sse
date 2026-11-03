@@ -6,6 +6,7 @@ Scriptname csq_TIF__05AAAAE3 Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
+Emotions.HandleEmotions("Puzzled", 80)
 XO.XOPlus(0.3)
 ;END CODE
 EndFunction
@@ -14,3 +15,5 @@ EndFunction
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
 LielleXOScript Property XO  Auto  
+
+LielleEmotionManager Property Emotions Auto

@@ -6,6 +6,7 @@ Scriptname xo_TIF__0508FFFD Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
+Emotions.HandleEmotions("Bitter", 80)
 XO.XOMinus(2.5)
 ;you dun goofed
 ;END CODE
@@ -15,3 +16,5 @@ EndFunction
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
 LielleXOScript Property XO  Auto  
+
+LielleEmotionManager Property Emotions Auto

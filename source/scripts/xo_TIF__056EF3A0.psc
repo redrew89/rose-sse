@@ -16,6 +16,7 @@ EndFunction
 Function Fragment_1(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
+Emotions.HandleEmotions("Happy", 90)
 RelationshipMarriageFIN.SetStage(10)
 ;END CODE
 EndFunction
@@ -26,3 +27,5 @@ EndFunction
 Quest Property LielleXOQHome  Auto  
 
 Quest Property RelationshipMarriageFIN  Auto  
+
+LielleEmotionManager Property Emotions Auto

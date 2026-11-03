@@ -41,7 +41,7 @@ LielleDynamicAppearanceManager DynApp
 event OnInit()
 
 	DynApp = GetOwningQuest() as LielleDynamicAppearanceManager
-	; Start through the manager, so its saved settings (glow off = no overlay) decide. Calling StartWarpaint
+	; Start through the manager, so its saved settings (Clean Face = no overlay) decide. Calling StartWarpaint
 	; here used this script's own default (Rose Red) and put the overlay on whenever the quest started.
 	if DynApp
 		DynApp.SetWarpaint()

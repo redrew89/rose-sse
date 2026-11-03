@@ -28,8 +28,6 @@ FormList Property LielleMisfitOutfitFLST Auto ; Formlist for containing Misfit M
 																				int Property iLielleBodyState = 1 Auto ; 0 - Always underwear, 1 - Story-based (default), 2 - Always nude
 																					LielleCoreScript Property Core Auto
 																						String msgFlag = "LielleCore - Outfits: "
-																						String sNudeBody = "lielle\\nude\\femalebody_1.nif"
-																						String sUnderwearBody = "lielle\\femalebody_1.nif"
 																		
 Event OnInit()
 	Core.Msg(msgFlag + "Initialization starting, waiting for aliases to initialize...")
@@ -207,24 +205,30 @@ Function SetSceneNude(bool abNude)
 	ApplyBody()
 EndFunction
 
-; Puts the right body model on her for the current setting. Model path changes on an armour addon aren't saved - the game
-; rebuilds them from the plugin on every load - so Lielle_PlayerLoadScript calls this after each load
+; Puts the right body on her for the current setting by swapping her skin between LielleBodyCustom and LielleBodyNude.
+; Changing the torso addon's model path instead only showed after a reload - QueueNiNodeUpdate keeps the skin mesh it
+; already built while the skin form stays the same. Skin changes aren't reliably saved, so Lielle_PlayerLoadScript
+; calls this after each load
 Function ApplyBody()
-	ArmorAddon LielleBodyAP = LielleBodyCustom.GetNthArmorAddon(0)
-	string sCurrent = LielleBodyAP.GetModelPath(false,true)
-	if sCurrent != sNudeBody
-		sUnderwearBody = sCurrent ; Remember whichever underwear body this install uses
+	Actor Lielle = LielleAlias.GetActorReference()
+	if !Lielle
+		Lielle = LielleRef as Actor
+	endif
+	Armor LielleBodyNude = Game.GetFormFromFile(0x009C0D0F, "Lielle.esp") as Armor
+	if !Lielle || !LielleBodyNude
+		Core.Msg(msgFlag + "ApplyBody - couldn't find Lielle or her nude body.")
+		return
 	endif
 
-	string sWanted = sUnderwearBody
+	Armor wanted = LielleBodyCustom
 	if iLielleBodyState == 2 || (iLielleBodyState == 1 && isNude)
-		sWanted = sNudeBody
+		wanted = LielleBodyNude
 	endif
 
-	if sCurrent != sWanted
-		LielleBodyAP.SetModelPath(sWanted,false,true)
-		Actor Lielle = LielleAlias.GetActorReference()
-		if Lielle && Lielle.Is3DLoaded()
+	ActorBase LielleBase = Lielle.GetActorBase()
+	if LielleBase.GetSkin() != wanted
+		LielleBase.SetSkin(wanted)
+		if Lielle.Is3DLoaded()
 			Lielle.QueueNiNodeUpdate() ; Rebuild her 3D so the new body shows
 		endif
 	endif

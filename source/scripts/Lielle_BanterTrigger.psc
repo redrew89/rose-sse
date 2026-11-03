@@ -89,6 +89,7 @@ Function CheckAllMods()
 	
 	
 	self.ModCheck(Rumarin3D, 702188, "3DNPC.esp")
+	self.ModCheck(Rumarin3D, 85001, "RumarinStandaloneFollower.esp") ; standalone Rumarin, only if the 3DNPC one didn't fill the alias
 	self.ModCheck(AnumLa3D, 169157, "3DNPC.esp")
 	self.ModCheck(InigoAlias, 35561, "Inigo.esp")
 	self.ModCheck(Mugnor3D, 812013, "3DNPC.esp")

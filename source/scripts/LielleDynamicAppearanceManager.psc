@@ -34,11 +34,7 @@ Function SetWarpaint(int menuIndex = -1, int customColor = 0xFFFFFF, bool bGlow 
 			menuIndex = 0 ; Saves from before this fix stored -1 on every load
 		endif
 	endif
-	; The paint is baked into her FaceGen tint, so there is no Clean Face any more - index 0 (old saves,
-	; story scenes) just means the default colour if glow gets turned on
-	if menuIndex == 0 && bGlow
-		menuIndex = 1
-	endif
+	; Index 0 is Clean Face - no paint and no glow. bGlow is still stored, so the glow comes back with the paint
 	iMenuSelectWarpaint = menuIndex
 	CUSTOM_PAINT = customColor
 	bWarpaintGlow = bGlow
@@ -65,13 +61,8 @@ Function SetWarpaint(int menuIndex = -1, int customColor = 0xFFFFFF, bool bGlow 
 		Warpaint.EmissiveMultiple = 0.0
 	endif
 
-	; The overlay only carries the glow: it fades in while glow is on, and with glow off it fades out and
-	; releases its slot (overlay setting 0) - the colour choice is kept for the next time glow is turned on
-	if bGlow
-		Warpaint.warpaintMCMSetting = menuIndex
-	else
-		Warpaint.warpaintMCMSetting = 0
-	endif
+	; The overlay carries the paint itself - glow only changes its emissive. Clean Face (0) releases the slot
+	Warpaint.warpaintMCMSetting = menuIndex
 	Warpaint.StartWarpaint()
 EndFunction
 

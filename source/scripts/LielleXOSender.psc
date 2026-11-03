@@ -6,6 +6,9 @@ Scriptname LielleXOSender Extends TopicInfo
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
+if sEmotion != ""
+	Emotions.HandleEmotions(sEmotion, iIntensity)
+endif
 if bIncrease
  XO.XOPlus(fVal)
 else
@@ -22,3 +25,8 @@ Bool Property bIncrease  Auto
 Float Property fVal  Auto  
 
 LielleXOScript Property XO  Auto  
+
+String Property sEmotion Auto
+Int Property iIntensity Auto
+
+LielleEmotionManager Property Emotions Auto

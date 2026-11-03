@@ -15,6 +15,7 @@ EndFunction
 Function Fragment_1(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
+Emotions.HandleEmotions("Vulnerable", 100)
 (GetOwningQuest() as LielleEmotionManager).SetTears()
 ;END CODE
 EndFunction
@@ -23,3 +24,5 @@ EndFunction
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
 Quest Property RelationshipMarriageBreakUp  Auto  
+
+LielleEmotionManager Property Emotions Auto

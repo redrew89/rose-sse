@@ -39,3 +39,7 @@ vs*/
 __pycache__/
 
 
+
+# voice folders being re-recorded with new talent (kept local)
+Sound/Voice/Lielle.esp/__LielleUnique/
+Sound/Voice/skyrim.esm/__lielleunique/

@@ -12,7 +12,9 @@ Perk Property LielleCSQTrust Auto
 
 ReferenceAlias Property PlayerAlias Auto
 
-LielleCoreScript Property LielleCore  Auto  
+LielleCoreScript Property LielleCore  Auto
+
+LielleXOScript Property XO  Auto
 
 
 Function UncutNightmareDisplay()
@@ -39,10 +41,11 @@ Function RewardDisplay()
 
 	if LielleCore.LielleNightmarePG == 0
 		;LielleCSQRewardUncut.show()
+		XO.XOPlus(3)
 		PlayerAlias.GetActorRef().AddPerk(LielleCSQTrust)
 	elseif LielleCore.LielleNightmarePG == 1
 		;LielleCSQRewardAltered.show()
-		
+		XO.XOPlus(2.5)
 	endif
 endFunction
 

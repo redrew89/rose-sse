@@ -6,7 +6,7 @@ Scriptname LielleXOScript extends Quest Conditional
 
 ; -- Relationship State Properties --
 bool Property bIsCourting = false Auto Conditional  ; Courtship state - raises cap, losses hit harder, breakup below minimum
-bool Property bCourtshipPaused = false Auto Conditional   ; Whether courtship activities are paused - blocks all Affection changes
+bool Property bCourtshipPaused = false Auto Conditional   ; Whether courtship activities are paused - does not block Affection changes
 bool Property bCanResume = true Auto Conditional    ; Whether courtship can automatically resume
 bool Property bIsMarried = false Auto Conditional  ; Marriage flag - keeps the raised cap, no automatic breakup
 float Property fFavor = 1.0 Auto Conditional             ; Favorability - modulates Affection changes, FAVOR_MIN to FAVOR_MAX
@@ -271,15 +271,6 @@ Function XOPlus(float aValue, bool bShowMsg = true)
         Initialize()
     endif
 
-    if aValue <= 0.0
-        return
-    endif
-
-    if bCourtshipPaused
-        Log("Courtship paused - ignored Affection gain of " + aValue, false)
-        return
-    endif
-
     if bShowMsg
         PlusText()
     endif
@@ -302,15 +293,6 @@ EndFunction
 Function XOMinus(float aValue, bool bShowMsg = true)
     if !initialized
         Initialize()
-    endif
-
-    if aValue <= 0.0
-        return
-    endif
-
-    if bCourtshipPaused
-        Log("Courtship paused - ignored Affection loss of " + aValue, false)
-        return
     endif
 
     if bShowMsg
@@ -351,7 +333,7 @@ EndFunction
 
 Function EndCourting()
     bIsCourting = false
-    bCourtshipPaused = false ; A pause outliving the courtship would block all Affection changes
+    bCourtshipPaused = false
     bCanResume = true
     Log("Courtship ended")
 EndFunction

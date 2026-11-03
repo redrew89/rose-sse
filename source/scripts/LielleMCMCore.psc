@@ -100,11 +100,8 @@ bool 	Property bNudeAlways			= false		Auto
 
 String[] 	warpaintOptions 
 
-; Warpaint overlay shelved: her paint lives in the FaceGen tint, and any overlay update on her refreshes the
-; others and makes them flicker. The warpaint options are left out of the page, and a page refresh turns off
-; glow a save may still carry (that removes the overlay - see LielleDynamicAppearanceManager.SetWarpaint).
-; The menu, when enabled, lists colours only: menu position N is manager index N + 1. Set true to restore.
-bool 	bWarpaintOverlayEnabled = false
+; The warpaint overlay carries her paint; Clean Face removes it (see LielleDynamicAppearanceManager.SetWarpaint).
+; Menu position N is manager index N.
 String[] 	tattooGlowColors
 
 String[] 	debugOutfitsList
@@ -148,7 +145,7 @@ EndProperty
 int Property iSkinOpt = 0 Auto ; Base skin for LielleDynAppController: 0 - Classic, 1 - Modern
 
 int function GetVersion()
-	return 472 ; Modified semantic versioning - 470 == 0.4.7.0, 500 == 0.5.0.0 - must only ever increase, or SkyUI skips OnVersionUpdate
+	return 473 ; Modified semantic versioning - 470 == 0.4.7.0, 500 == 0.5.0.0 - must only ever increase, or SkyUI skips OnVersionUpdate
 endFunction
 
 event OnVersionUpdate(int a_version)
@@ -178,12 +175,13 @@ Event OnConfigInit()
 	
 		;Core.Msg("LielleCore: Detected Overlay Distribution Framework - Enabling Dynamic Appearance 2.0",true)
 		
-		warpaintOptions 			= new String[5]
-		warpaintOptions[0] 			= "Rose Red"
-		warpaintOptions[1] 			= "Dwemer Purple"
-		warpaintOptions[2] 			= "Lovestruck Pink"
-		warpaintOptions[3] 			= "Pride Forever!"
-		warpaintOptions[4] 			= "Custom Color"
+		warpaintOptions 			= new String[6]
+		warpaintOptions[0] 			= "Clean Face"
+		warpaintOptions[1] 			= "Rose Red"
+		warpaintOptions[2] 			= "Dwemer Purple"
+		warpaintOptions[3] 			= "Lovestruck Pink"
+		warpaintOptions[4] 			= "Pride Forever!"
+		warpaintOptions[5] 			= "Custom Color"
 		
 		tattooGlowColors 			= new String[6]
 		tattooGlowColors[0] 		= "Disabled"
@@ -424,7 +422,11 @@ Event OnPageReset(string Page)
 			flag_TattooCustom = OPTION_FLAG_DISABLED
 		else
 			; Story Mode OFF: Enable options based on selections
-			flag_WarpaintGlow = OPTION_FLAG_NONE
+			if DynAppManager.iMenuSelectWarpaint == 0
+				flag_WarpaintGlow = OPTION_FLAG_DISABLED ; Clean Face has no paint to glow
+			else
+				flag_WarpaintGlow = OPTION_FLAG_NONE
+			endif
 
 			if DynAppManager.iMenuSelectWarpaint == 5
 				flag_WarpaintCustom = OPTION_FLAG_NONE
@@ -445,15 +447,9 @@ Event OnPageReset(string Page)
 		AddEmptyOption()
 
 		; Main menus and toggles use flag_MainMenus (disabled when Story Mode is on)
-		if bWarpaintOverlayEnabled
-			opt_PaintGlow = AddToggleOption("Dynamic Warpaint Glow:", DynAppManager.bWarpaintGlow, flag_WarpaintGlow)		
-			opt_MenuWarpaint = AddMenuOption("Dynamic Warpaint:", warpaintOptions[WarpaintMenuPos()], flag_MainMenus)		
-			opt_WarpaintCustom = AddColorOption("Custom Color: ", DynAppManager.CUSTOM_PAINT, flag_WarpaintCustom)
-		else
-			opt_PaintGlow = -1 ; option IDs are saved - stale ones could match another option
-			opt_MenuWarpaint = -1
-			opt_WarpaintCustom = -1
-		endif
+		opt_PaintGlow = AddToggleOption("Dynamic Warpaint Glow:", DynAppManager.bWarpaintGlow, flag_WarpaintGlow)		
+		opt_MenuWarpaint = AddMenuOption("Dynamic Warpaint:", warpaintOptions[WarpaintMenuPos()], flag_MainMenus)		
+		opt_WarpaintCustom = AddColorOption("Custom Color: ", DynAppManager.CUSTOM_PAINT, flag_WarpaintCustom)
 		opt_TattooGlow	= AddToggleOption("Tattoo Glow: ", DynAppManager.bTattooGlow, flag_TattooGlow)
 		opt_MenuTattoo = AddMenuOption("Dynamic Tattoo Accent:", tattooGlowColors[DynAppManager.iMenuSelectTattoo], flag_MainMenus)
 		opt_TattooCustom = AddColorOption("Custom Color: ", DynAppManager.CUSTOM_TATT, flag_TattooCustom)
@@ -486,12 +482,12 @@ endEvent
 
 
 Event OnOptionColorAccept(int option, int value)
-	if option == opt_WarpaintCustom && bWarpaintOverlayEnabled
+	if option == opt_WarpaintCustom
 		DynAppManager.CUSTOM_PAINT = value
 		DynAppManager.SetWarpaint(5, value, DynAppManager.bWarpaintGlow)
 	elseif option == opt_TattooCustom
 		DynAppManager.CUSTOM_TATT = value
-		DynAppManager.SetTattoo(5, value)
+		DynAppManager.SetTattoo(5, value, DynAppManager.bTattooGlow)
 	endif	
 	ForcePageReset()
 EndEvent
@@ -501,15 +497,15 @@ Event OnOptionMenuAccept(int option, int index)
 		return
 	endif
 	
-	if option == opt_MenuWarpaint && bWarpaintOverlayEnabled
+	if option == opt_MenuWarpaint
 		if warpaintOptions && index < warpaintOptions.Length
 			SetMenuOptionValue(opt_MenuWarpaint, warpaintOptions[index])
-			DynAppManager.SetWarpaint(index + 1, DynAppManager.CUSTOM_PAINT, DynAppManager.bWarpaintGlow) ; menu has no Clean Face entry
+			DynAppManager.SetWarpaint(index, DynAppManager.CUSTOM_PAINT, DynAppManager.bWarpaintGlow)
 		endif
 	elseif option == opt_MenuTattoo
 		if tattooGlowColors && index < tattooGlowColors.Length
 			SetMenuOptionValue(opt_MenuTattoo, tattooGlowColors[index])
-			DynAppManager.SetTattoo(index, DynAppManager.CUSTOM_TATT)
+			DynAppManager.SetTattoo(index, DynAppManager.CUSTOM_TATT, DynAppManager.bTattooGlow)
 		endif
 	elseif option == opt_MenuNudity && index <= 2
 		; Menu order differs from LielleOutfitScript's body states: 0 - Underwear, 1 - Story, 2 - Nude
@@ -548,10 +544,10 @@ int Function NudityMenuPos()
 EndFunction
 
 int Function WarpaintMenuPos()
-	if DynAppManager.iMenuSelectWarpaint < 1
+	if DynAppManager.iMenuSelectWarpaint < 0
 		return 0
 	endif
-	return DynAppManager.iMenuSelectWarpaint - 1
+	return DynAppManager.iMenuSelectWarpaint
 EndFunction
 
 String Function CheckIntegration(GlobalVariable checkGlobal = none, ReferenceAlias charAlias = none, bool bCheck = false)
@@ -651,7 +647,7 @@ Event OnOptionSelect(int option)
 		Core.LielleNativeHeal = bHealingNative
 		SetToggleOptionValue(option, bHealingNative,false)	
 		
-	elseif option == opt_PaintGlow && bWarpaintOverlayEnabled
+	elseif option == opt_PaintGlow
 		DynAppManager.bWarpaintGlow = !DynAppManager.bWarpaintGlow
 		SetToggleOptionValue(option, DynAppManager.bWarpaintGlow, false)
 		DynAppManager.SetWarpaint(DynAppManager.iMenuSelectWarpaint, DynAppManager.CUSTOM_PAINT, DynAppManager.bWarpaintGlow)
@@ -710,14 +706,8 @@ Event OnUpdate()
 	
 	if bNiOverridePresent && DynAppManager
 		; Just call the manager functions
-		if bWarpaintOverlayEnabled
-			DynAppManager.SetWarpaint(DynAppManager.GetWarpaintSelection(), DynAppManager.GetCustomPaintColor(), DynAppManager.GetWarpaintGlow())
-		else
-			; Glow off removes any warpaint overlay - including paint applied without the manager (old saves), which
-			; RaceMenu would otherwise keep restoring on every load. Slots without paint are left untouched.
-			DynAppManager.SetWarpaint(DynAppManager.GetWarpaintSelection(), DynAppManager.GetCustomPaintColor(), false)
-		endif
-		DynAppManager.SetTattoo(DynAppManager.GetTattooSelection(), DynAppManager.GetCustomTattColor())
+		DynAppManager.SetWarpaint(DynAppManager.GetWarpaintSelection(), DynAppManager.GetCustomPaintColor(), DynAppManager.GetWarpaintGlow())
+		DynAppManager.SetTattoo(DynAppManager.GetTattooSelection(), DynAppManager.GetCustomTattColor(), DynAppManager.bTattooGlow)
 	endif
 	
 	; Handle nightmare option flag

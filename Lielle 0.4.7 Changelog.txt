@@ -23,7 +23,7 @@ Lielle 0.4.7 Changelog
  Added patchless support for KS Jewelry SSE, which enhances Lielle's wedding outfit, if installed, as well as KS Hairdos wigs component
  Added Outfit Modesty Framework, leveraging KID. Lielle will now object to outfits and armors she finds too saucy or revealing. Piggy-backs existing keyword resources, including SLA and ORF keywords. Only items the player hands to her are judged, and an ignore keyword lets specific items always be accepted
  Restructured and made slight edits to Lielle's marriage process. She will now require a two-week betrothal before marriage, as a hint for future changes to romance
- Added Dynamic Appearance, based on the initial test from 0.4.5. This release covers Lielle's glowing tattoo accent, with colour and glow options in the MCM; the accent fades in and out, and settings carry across save loads. Warpaint glow options are temporarily removed while a flickering issue with stacked RaceMenu overlays is investigated
+ Added Dynamic Appearance, based on the initial test from 0.4.5. This release covers Lielle's glowing tattoo accent and warpaint glow, each with colour and glow options in the MCM; both fade in and out, and settings carry across save loads
  Added new story element for Dynamic Appearance
  Added an idle reading behavior in certain settings; implementation method borrowed from Ashe - Crystal Heart by Martimus, with permission
  Revised Lielle's follower framework, giving her complete standalone follower behavior. This makes her INCOMPATIBLE with follower framework mods like NFF/EFF/BFF/AFT
@@ -54,7 +54,18 @@ Lielle 0.4.7 Changelog
  Fixed the Dawnbreaker research reward not returning Dawnbreaker to the player
  Fixed Lielle's Study Rank notifications, the 'cannot study while following' notice, and two dialogue lines whose expressions never triggered
  Fixed choosing most player homes after the wedding doing nothing; Lielle now moves to any of the vanilla houses, from the first post-wedding conversation or when asked to move later, and moving her clears any custom home set up through "A Place To Grow"
- 
+ Fixed Lielle twitching and staying tethered to the player in inns, shops, player homes and hold capitals instead of sandboxing; she now wanders, sits and uses idle markers there, and catches back up once the player moves away or leaves the cell. Her follow distance is also less clingy, and when catching up from a short way off she jogs rather than sprinting, easing to a stop instead of bolting
+ Fixed Lielle getting stuck in the Hall of Attainment after her College scene with Nirya or Enthir started while she was following; those scenes now only play while she's at home at the College, not while travelling with the player
+ Fixed Lielle's shopkeeper and orphan scenes starting when any two NPCs chatted nearby (or while she was elsewhere), which could send her off to a merchant or freeze another NPC; they now start only from Lielle's own conversations while she's following
+ Fixed unknown characters appearing in place of apostrophes and ellipses in 22 player dialogue choices and in Lielle's subtitles; in player choices these could also leave a conversation stuck with no reply when using player-voice mods (DBVO, Dragonborn ReVoiced)
+ Fixed story force-greets and scenes never triggering while Lielle was following (College commentary during Containment, main quest commentary, and several Arcane Research quests); her follower behavior now sits below her story quests, as vanilla followers do. Story and relationship greetings and idle comments that were being drowned out by her generic follower lines can now play
+ Fixed Lielle wandering off to the Arcaneum while following during the early Arcane Research stages
+ Fixed Lielle's reaction to Ancano's actions during Containment never playing; she now approaches the player when Mirabelle hands over the Torc of Labyrinthian, whether or not she's following
+ Fixed several hundred of Lielle's and Three-Eyes' voice lines playing noticeably quieter than the rest of their dialogue
+ Fixed missing lip sync on 49 of Lielle's lines, including the Kiena and Sofia conversations, Lielle's Secret, The Dreamstride and the Nightmare dialogue
+ Fixed Lielle and other followers turning on each other when one's spell accidentally hit the other; added a Lielle's Allies faction shared by Lielle and her banter companions, and several popular followers outside her banter framework now join it when installed, with Lielle also joining their own allies factions where they have one (via SPID, no patch or extra master required); Lielle's friendly-fire damage protection now also covers members of that faction. As a fallback, those followers and the followers in Lielle's banter framework are given a hidden ability that drops combat if they turn on Lielle. Further compatibility for followers with their own factions can be added the same way
+ Fixed Lielle fleeing from creatures that aren't spiders; her spider panic checked for the spider faction, which some creature mods (such as Mihail's) give to their creatures so spiders won't attack them. She now flees only from frostbite spiders (including the Web Mother from Creation Club), tagged through KID
+
 A Team Roseheart Production:
 
 Technical and Creative Team:

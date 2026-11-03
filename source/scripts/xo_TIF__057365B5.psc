@@ -6,9 +6,12 @@ Scriptname xo_TIF__057365B5 Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
+Emotions.HandleEmotions("Flirty", 80)
 (GetOwningQuest() as LielleXOHomeSetScript).PlaceActivityMarker(0)
 ;END CODE
 EndFunction
 ;END FRAGMENT
 
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
+
+LielleEmotionManager Property Emotions Auto

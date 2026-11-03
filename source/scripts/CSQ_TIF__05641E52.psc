@@ -6,6 +6,7 @@ Scriptname CSQ_TIF__05641E52 Extends TopicInfo Hidden
 Function Fragment_1(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
+Emotions.HandleEmotions("Anguish", 70)
 rdu.SlideTime(18)
 ;END CODE
 EndFunction
@@ -25,3 +26,5 @@ EndFunction
 rdUtils Property rdu  Auto  
 
 Scene Property NightmareCampScene2  Auto  
+
+LielleEmotionManager Property Emotions Auto

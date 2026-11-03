@@ -7,9 +7,7 @@ Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
 GetOwningQuest().SetStage(50)
-LielleXO.XOPlus(3)
-;(GetOwningQuest() as LielleCSQNightmareSelection).RewardDisplay()
-PlayerAlias.GetActorRef().AddPerk(LielleCSQTrust)
+(GetOwningQuest() as LielleCSQNightmareSelection).RewardDisplay()
 ;END CODE
 EndFunction
 ;END FRAGMENT

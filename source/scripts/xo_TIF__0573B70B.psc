@@ -17,6 +17,7 @@ EndFunction
 Function Fragment_1(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
+Emotions.HandleEmotions("Happy", 90)
 LielleXOQ.MoveOut()
 ;END CODE
 EndFunction
@@ -27,3 +28,5 @@ EndFunction
 Quest Property LielleXOQHome  Auto  
 
 LielleWeddingScript Property LielleXOQ  Auto  
+
+LielleEmotionManager Property Emotions Auto

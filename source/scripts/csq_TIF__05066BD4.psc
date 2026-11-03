@@ -6,6 +6,7 @@ Scriptname csq_TIF__05066BD4 Extends TopicInfo Hidden
 Function Fragment_0(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
+Emotions.HandleEmotions("Sad", 80)
 LielleFollower.DismissFollower(0,1,akSpeaker)
 GetOwningQuest().setstage(10)
 ;END CODE
@@ -16,3 +17,4 @@ EndFunction
 
 liellefollowerscript Property LielleFollower  Auto  
 
+LielleEmotionManager Property Emotions Auto

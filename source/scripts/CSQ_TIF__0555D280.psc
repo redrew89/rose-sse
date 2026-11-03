@@ -6,6 +6,7 @@ Scriptname CSQ_TIF__0555D280 Extends TopicInfo Hidden
 Function Fragment_2(ObjectReference akSpeakerRef)
 Actor akSpeaker = akSpeakerRef as Actor
 ;BEGIN CODE
+Emotions.HandleEmotions("Bitter", 80)
 ChildLielle.GetReference().Enable(1)
 ChildMalek.GetReference().Enable(1)
 ChildMarek.GetReference().Enable(1)
@@ -34,3 +35,5 @@ ReferenceAlias Property ChildLielle  Auto
 ReferenceAlias Property ChildMalek Auto
 
 ReferenceAlias Property ChildMarek Auto
+
+LielleEmotionManager Property Emotions Auto
